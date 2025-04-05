@@ -1,6 +1,5 @@
 import {
   AlertTriangle,
-  BookOpen,
   Bug,
   Calendar,
   Clock,
@@ -168,11 +167,6 @@ export const getMainNavLinks = (currentPath: string): NavStructure => {
       },
     ],
     navSecondary: [
-      {
-        title: 'Documentation',
-        url: 'https://docs.hatchet.run',
-        icon: BookOpen,
-      },
       {
         title: 'Feedback',
         url: 'https://github.com/hatchet-dev/hatchet/issues',

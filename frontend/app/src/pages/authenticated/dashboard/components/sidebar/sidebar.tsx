@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BookOpen,
   ChevronRight,
   ChevronsUpDown,
   MessageCircle,
@@ -54,6 +55,7 @@ import { Code } from '@/components/ui/code';
 import hatchet from '@/assets/hatchet.svg';
 import { useTheme } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
+import { pages, useDocs } from '@/hooks/use-docs-sheet';
 export const iframeHeight = '800px';
 
 export const description = 'An inset sidebar with secondary navigation.';
@@ -68,6 +70,7 @@ export function AppSidebar({ children }: PropsWithChildren) {
   const navLinks = getMainNavLinks(location.pathname);
   const { theme } = useTheme();
   const { toggleSidebar } = useSidebar();
+  const docs = useDocs();
 
   const supportReference = useMemo(() => {
     return `ver: ${meta?.version}
@@ -246,7 +249,15 @@ name: ${user?.name}`;
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </SidebarMenuItem>
-
+                <SidebarMenuItem key="docs">
+                  <SidebarMenuButton
+                    size="sm"
+                    onClick={() => docs.open(pages.home.index)}
+                  >
+                    <BookOpen />
+                    <span>Documentation</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 {navLinks.navSecondary.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild size="sm">

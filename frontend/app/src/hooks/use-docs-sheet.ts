@@ -1,4 +1,7 @@
 import { createContext, useContext, useState } from 'react';
+import docMetadata from '@/docs-meta-data';
+
+export const pages = docMetadata;
 
 export type DocRef = {
   title: string;

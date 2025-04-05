@@ -23,8 +23,7 @@ import useUser from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Logo } from '@/components/ui/logo';
-
-export default function Authenticated() {
+export default function DashboardLayout() {
   const { tenant, isLoading } = useTenant();
   const { toggleTheme, theme } = useTheme();
   const { logout } = useUser();
