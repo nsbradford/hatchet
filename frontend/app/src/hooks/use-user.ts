@@ -3,6 +3,7 @@ import api, {
   User,
   UserLoginRequest,
   UserRegisterRequest,
+  TenantInvite,
 } from '@/lib/api';
 import {
   useMutation,
@@ -14,6 +15,12 @@ import { AxiosResponse } from 'axios';
 interface UserState {
   data?: User;
   memberships?: TenantMember[];
+  invites: {
+    list: TenantInvite[];
+    loading: boolean;
+    accept: UseMutationResult<AxiosResponse<void, any>, Error, string, unknown>;
+    reject: UseMutationResult<AxiosResponse<void, any>, Error, string, unknown>;
+  };
   isLoading: boolean;
   logout: UseMutationResult<AxiosResponse<User, any>, Error, void, unknown>;
   login: UseMutationResult<User, Error, UserLoginRequest, unknown>;
@@ -46,7 +53,7 @@ export default function useUser({
   }
 
   const membershipsQuery = useQuery({
-    queryKey: ['user-memberships:list'],
+    queryKey: ['user:memberships:list'],
     queryFn: async () => (await api.tenantMembershipsList()).data,
     enabled: !!userQuery.data && userQuery.data.emailVerified,
   });
@@ -54,6 +61,19 @@ export default function useUser({
   if (membershipsQuery.isError) {
     // TODO: handle error
     console.error(membershipsQuery.error);
+  }
+
+  // Query to fetch user invites with 60 second refetch interval
+  const invitesQuery = useQuery({
+    queryKey: ['user:list:tenant-invites'],
+    queryFn: async () => (await api.userListTenantInvites()).data,
+    enabled: !!userQuery.data && userQuery.data.emailVerified,
+    refetchInterval: refetchInterval || 20 * 1000, // 60 seconds
+  });
+
+  if (invitesQuery.isError) {
+    // TODO: handle error
+    console.error(invitesQuery.error);
   }
 
   const logoutMutation = useMutation({
@@ -95,9 +115,40 @@ export default function useUser({
     },
   });
 
+  const acceptInviteMutation = useMutation({
+    mutationKey: ['tenant-invite:accept'],
+    mutationFn: async (inviteId: string) => {
+      return api.tenantInviteAccept({ invite: inviteId });
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        invitesQuery.refetch(),
+        userQuery.refetch(),
+        membershipsQuery.refetch(),
+      ]);
+      return true;
+    },
+  });
+
+  const rejectInviteMutation = useMutation({
+    mutationKey: ['tenant-invite:reject'],
+    mutationFn: async (inviteId: string) => {
+      return api.tenantInviteReject({ invite: inviteId });
+    },
+    onSuccess: () => {
+      invitesQuery.refetch();
+    },
+  });
+
   return {
     data: userQuery.data,
     memberships: membershipsQuery.data?.rows,
+    invites: {
+      list: invitesQuery.data?.rows || [],
+      loading: invitesQuery.isLoading,
+      accept: acceptInviteMutation,
+      reject: rejectInviteMutation,
+    },
     isLoading: userQuery.isLoading || membershipsQuery.isLoading,
     logout: logoutMutation,
     login: loginMutation,

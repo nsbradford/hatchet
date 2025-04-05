@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { MembersProvider } from '@/hooks/use-members';
-import useMembers from '@/hooks/use-members';
 import { MembersTable } from '@/components/members/members-table';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { TenantMember } from '@/lib/api/generated/data-contracts';
-import { DocsButton } from '@/components/ui/docs-button';
-import docs from '@/docs-meta-data';
-import { UserPlus } from 'lucide-react';
-import { RemoveMemberForm } from './components/remove-member-form';
+import { TenantMemberRole } from '@/lib/api/generated/data-contracts';
+import { UserPlus, Lock } from 'lucide-react';
+import { Dialog } from '@/components/ui/dialog';
+import useCan from '@/hooks/use-can';
+import { members } from '@/lib/can/features/members.permissions';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { CreateInviteForm } from './components/create-invite-form';
 
 export default function MembersPage() {
   return (
@@ -19,16 +20,22 @@ export default function MembersPage() {
 }
 
 function MembersContent() {
-  const { data, isLoading, refetch } = useMembers();
-  const [removeMember, setRemoveMember] = useState<TenantMember | null>(null);
+  const { canWithReason } = useCan();
+  const { allowed: canViewMembers, message: canViewMembersMessage } =
+    canWithReason(members.view(TenantMemberRole.MEMBER));
+
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+
+  // Check if user can invite members
+  const { allowed: canInvite, message: canInviteMessage } = canWithReason(
+    members.invite(TenantMemberRole.MEMBER),
+  );
 
   const InviteMemberButton = () => (
     <Button
       key="invite-member"
-      onClick={() => {
-        // TODO: Implement invite functionality
-        alert('Invite functionality not yet implemented');
-      }}
+      onClick={() => setShowInviteDialog(true)}
+      disabled={!canInvite}
     >
       <UserPlus className="mr-2 h-4 w-4" />
       Invite Member
@@ -43,39 +50,46 @@ function MembersContent() {
             Members
           </h2>
           <div className="flex flex-row items-center gap-2">
-            <DocsButton doc={docs.home.setup} size="icon" />
+            {/* <DocsButton doc={docs.home.setup} size="icon" /> */}
             <InviteMemberButton />
           </div>
         </div>
         <p className="text-gray-700 dark:text-gray-300 my-4">
           Manage team members and their permissions in your workspace.
         </p>
-        <Separator className="my-4" />
+        {(canViewMembersMessage || canInviteMessage) && (
+          <Alert variant="warning">
+            <Lock className="w-4 h-4 mr-2" />
+            <AlertTitle>Role required</AlertTitle>
+            <AlertDescription>
+              {canViewMembersMessage || canInviteMessage}
+            </AlertDescription>
+          </Alert>
+        )}
+        {canViewMembers && (
+          <>
+            <Separator className="my-4" />
 
-        <MembersTable
-          data={data || []}
-          isLoading={isLoading}
-          onRemoveClick={(member) => {
-            // Permission check is handled in the RemoveMemberForm component
-            setRemoveMember(member);
-          }}
-          emptyState={
-            <div className="flex flex-col items-center justify-center gap-4 py-8">
-              <p className="text-sm text-muted-foreground">
-                This state shouldn't be possible, how did you get here?
-              </p>
-            </div>
-          }
-        />
+            <h3 className="text-xl font-semibold leading-tight text-foreground mb-4">
+              Active Members
+            </h3>
+            <MembersTable
+              emptyState={
+                <div className="flex flex-col items-center justify-center gap-4 py-8">
+                  <p className="text-sm text-muted-foreground">
+                    No members found. Invite members to get started.
+                  </p>
+                  {canInvite && <InviteMemberButton />}
+                </div>
+              }
+            />
+          </>
+        )}
 
-        {removeMember && (
-          <RemoveMemberForm
-            member={removeMember}
-            close={() => {
-              setRemoveMember(null);
-              refetch();
-            }}
-          />
+        {showInviteDialog && (
+          <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+            <CreateInviteForm close={() => setShowInviteDialog(false)} />
+          </Dialog>
         )}
       </div>
     </div>

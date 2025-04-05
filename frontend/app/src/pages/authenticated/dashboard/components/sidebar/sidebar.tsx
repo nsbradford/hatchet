@@ -52,9 +52,6 @@ import useTenant from '@/hooks/use-tenant';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Logo } from '@/components/ui/logo';
 import { Code } from '@/components/ui/code';
-import hatchet from '@/assets/hatchet.svg';
-import { useTheme } from '@/components/theme-provider';
-import { cn } from '@/lib/utils';
 import { pages, useDocs } from '@/hooks/use-docs-sheet';
 export const iframeHeight = '800px';
 
@@ -68,7 +65,6 @@ export function AppSidebar({ children }: PropsWithChildren) {
   const navigate = useNavigate();
   const location = useLocation();
   const navLinks = getMainNavLinks(location.pathname);
-  const { theme } = useTheme();
   const { toggleSidebar } = useSidebar();
   const docs = useDocs();
 
@@ -90,18 +86,6 @@ name: ${user?.name}`;
               <SidebarMenuItem>
                 <SidebarMenuButton size="lg" onClick={() => toggleSidebar()}>
                   <Logo variant="md" />
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      <img
-                        src={hatchet}
-                        alt="Hatchet"
-                        className={cn(
-                          'transition-all h-4 ml-1',
-                          theme === 'dark' ? 'invert' : '',
-                        )}
-                      />
-                    </span>
-                  </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </header>

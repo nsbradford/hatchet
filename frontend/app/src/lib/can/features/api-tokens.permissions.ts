@@ -1,16 +1,12 @@
 import { PermissionSet, RejectReason } from '@/lib/can';
 import { TenantMemberRole } from '@/lib/api';
+import { RANK } from '@/lib/can/features/members.permissions';
 
 export const apiTokens: PermissionSet = {
   manage:
     () =>
     ({ membership }) => {
-      const allowed = [
-        TenantMemberRole.OWNER,
-        TenantMemberRole.ADMIN,
-        TenantMemberRole.MEMBER,
-      ];
-      if (!membership || !allowed.includes(membership)) {
+      if (!membership || RANK[membership] <= RANK[TenantMemberRole.MEMBER]) {
         return {
           allowed: false,
           reason: RejectReason.ROLE_REQUIRED,

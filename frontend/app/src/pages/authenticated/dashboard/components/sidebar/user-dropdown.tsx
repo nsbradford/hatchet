@@ -2,11 +2,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import useUser from '@/hooks/use-user';
 import useTenant from '@/hooks/use-tenant';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Tenant } from '@/lib/api';
 
-export function UserBlock() {
+interface UserBlockProps {
+  variant?: 'default' | 'compact';
+}
+
+export function UserBlock({ variant = 'default' }: UserBlockProps) {
   const { data: user } = useUser();
-  const isMobile = useIsMobile();
 
   const name = user?.name || user?.email;
   const initials = name
@@ -21,7 +24,7 @@ export function UserBlock() {
         {/* <AvatarImage src={user?.avatar} alt={user?.name} /> */}
         <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
       </Avatar>
-      {!isMobile && (
+      {variant === 'default' && (
         <div className="grid flex-1 text-left text-sm leading-tight">
           <span className="truncate font-semibold">{name}</span>
           <span className="truncate text-xs">{user?.email}</span>
@@ -31,10 +34,21 @@ export function UserBlock() {
   );
 }
 
-export function TenantBlock() {
-  const { tenant } = useTenant();
+interface TenantBlockProps extends UserBlockProps {
+  tenant?: Partial<Tenant>;
+  tagline?: JSX.Element;
+}
 
-  const name = tenant?.name;
+export function TenantBlock({
+  tenant,
+  tagline,
+  variant = 'default',
+}: TenantBlockProps) {
+  const { tenant: currentTenant } = useTenant();
+
+  const activeTenant = tenant || currentTenant;
+
+  const name = activeTenant?.name;
   const initials = name
     ?.split(' ')
     .slice(0, 2) // Take at most 2 initials
@@ -47,11 +61,14 @@ export function TenantBlock() {
         {/* <AvatarImage src={user?.avatar} alt={user?.name} /> */}
         <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
       </Avatar>
-      <div className="grid flex-1 text-left text-sm leading-tight">
-        <span className="truncate font-semibold">
-          {name || <Skeleton className="h-4 w-24" />}
-        </span>
-      </div>
+      {variant === 'default' && (
+        <div className="grid flex-1 items-center text-left text-sm leading-tight">
+          <span className="truncate font-semibold">
+            {name || <Skeleton className="h-4 w-24" />}
+          </span>
+          {tagline && <span className="truncate text-xs">{tagline}</span>}
+        </div>
+      )}
     </>
   );
 }

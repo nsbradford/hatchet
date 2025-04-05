@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { useApiTokensContext } from '@/hooks/use-api-tokens';
+import useApiTokens, { useApiTokensContext } from '@/hooks/use-api-tokens';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiTokens } from '@/lib/can/features/api-tokens.permissions';
 import useCan from '@/hooks/use-can';
@@ -39,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { RevokeTokenForm } from '@/pages/authenticated/dashboard/settings/api-tokens/components/revoke-token-form';
 
 // Create a DataTableColumnHeader component
 interface DataTableColumnHeaderProps<TData>
@@ -202,18 +203,13 @@ function DataTablePagination<TData>({
 }
 
 interface TokensTableProps {
-  data: APIToken[];
-  isLoading: boolean;
-  onRevokeClick: (token: APIToken) => void;
   emptyState?: React.ReactNode;
 }
 
-export function TokensTable({
-  data,
-  isLoading,
-  onRevokeClick,
-  emptyState,
-}: TokensTableProps) {
+export function TokensTable({ emptyState }: TokensTableProps) {
+  const { data, isLoading } = useApiTokens();
+  const [revokeToken, setRevokeToken] = useState<APIToken | null>(null);
+
   const { filters, setFilters } = useApiTokensContext();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({
@@ -267,7 +263,7 @@ export function TokensTable({
           <div className="text-right">
             <Button
               variant="ghost"
-              onClick={() => onRevokeClick(row.original)}
+              onClick={() => setRevokeToken(row.original)}
               className="text-red-500 hover:text-red-700"
             >
               Revoke
@@ -281,7 +277,7 @@ export function TokensTable({
 
   // Create table instance
   const table = useReactTable<APIToken>({
-    data: isLoading ? [] : data,
+    data: data ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     state: {
@@ -317,14 +313,14 @@ export function TokensTable({
     onPaginationChange: setPagination,
     manualSorting: true, // Keep as true since we're handling sorting through API
     manualPagination: true,
-    pageCount: Math.ceil(data.length / pagination.pageSize),
+    pageCount: Math.ceil((data?.length ?? 0) / pagination.pageSize),
   });
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          {data.length} token(s) found
+          {data?.length} token(s) found
         </div>
         <DataTableViewOptions table={table} />
       </div>
@@ -392,6 +388,12 @@ export function TokensTable({
         </UITable>
       </div>
       <DataTablePagination table={table} />
+      {revokeToken && (
+        <RevokeTokenForm
+          apiToken={revokeToken}
+          close={() => setRevokeToken(null)}
+        />
+      )}
     </div>
   );
 }

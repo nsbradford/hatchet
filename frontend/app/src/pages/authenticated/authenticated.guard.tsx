@@ -1,10 +1,11 @@
 import AnalyticsProvider from '@/components/providers/analytics.provider';
 import SupportChat from '@/components/providers/support-chat.provider';
 import useUser from '@/hooks/use-user';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 export default function AuthenticatedGuard() {
   const user = useUser();
+  const location = useLocation();
 
   // user is not authenticated
   if (!user.isLoading && !user.data) {
@@ -17,8 +18,13 @@ export default function AuthenticatedGuard() {
   }
 
   // user has no tenant
-  if (!user.isLoading && user.memberships && user.memberships.length === 0) {
-    return <Navigate to="/onboarding/new" />;
+  if (
+    !user.isLoading &&
+    user.memberships &&
+    user.memberships.length === 0 &&
+    !location.pathname.startsWith('/onboarding')
+  ) {
+    return <Navigate to="/onboarding" />;
   }
 
   return (

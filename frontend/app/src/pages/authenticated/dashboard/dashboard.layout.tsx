@@ -23,6 +23,7 @@ import useUser from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Logo } from '@/components/ui/logo';
+import { Alerter } from './components/sidebar/alerter';
 export default function DashboardLayout() {
   const { tenant, isLoading } = useTenant();
   const { toggleTheme, theme } = useTheme();
@@ -43,7 +44,7 @@ export default function DashboardLayout() {
                         <>
                           <SidebarTrigger
                             className="-ml-1"
-                            icon={<Logo variant="md" />}
+                            icon={<Logo variant="icon" />}
                           />
                           <Separator
                             orientation="vertical"
@@ -54,14 +55,16 @@ export default function DashboardLayout() {
                       <BreadcrumbNav />
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
+                      {/* SECONDARY BUTTONS */}
+                      <Alerter />
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            className="flex items-center gap-2 p-1 px-2"
+                            className="flex items-center gap-2 p-0"
                           >
-                            <UserBlock />
+                            <UserBlock variant="compact" />
                             <ChevronsUpDown className="ml-auto size-4" />
                           </Button>
                         </DropdownMenuTrigger>

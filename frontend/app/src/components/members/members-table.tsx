@@ -1,4 +1,5 @@
 import {
+  TenantInvite,
   TenantMember,
   TenantMemberRole,
 } from '@/lib/api/generated/data-contracts';
@@ -17,22 +18,23 @@ import useCan from '@/hooks/use-can';
 import { members } from '@/lib/can/features/members.permissions';
 import useUser from '@/hooks/use-user';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import useMembers from '@/hooks/use-members';
+import { RemoveMemberForm } from '@/pages/authenticated/dashboard/settings/members/components/remove-member-form';
+import { RevokeInviteForm } from '@/pages/authenticated/dashboard/settings/members/components/revoke-invite-form';
+import { Separator } from '@radix-ui/react-separator';
+import { InvitesTable } from '@/pages/authenticated/dashboard/settings/members/components/invites-table';
 
 interface MembersTableProps {
-  data: TenantMember[];
-  isLoading: boolean;
-  onRemoveClick?: (member: TenantMember) => void;
   emptyState?: React.ReactNode;
 }
 
-export function MembersTable({
-  data,
-  isLoading,
-  onRemoveClick,
-  emptyState,
-}: MembersTableProps) {
+export function MembersTable({ emptyState }: MembersTableProps) {
   const { can } = useCan();
   const { data: user } = useUser();
+  const { data, isLoading, invites, isLoadingInvites, refetch } = useMembers();
+  const [removeMember, setRemoveMember] = useState<TenantMember | null>(null);
+  const [revokeInvite, setRevokeInvite] = useState<TenantInvite | null>(null);
 
   if (isLoading) {
     return <MembersTableSkeleton />;
@@ -43,51 +45,95 @@ export function MembersTable({
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>User</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead className="w-[100px] text-right"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((member) => (
-            <TableRow key={member.metadata.id}>
-              <TableCell className="font-medium">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  {member.user.name || '-'}
-                  {member.user.email === user?.email && (
-                    <Badge variant="outline" className="ml-2">
-                      You
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>{member.user.email}</TableCell>
-              <TableCell>{formatRole(member.role)}</TableCell>
-              <TableCell>{formatDate(member.metadata.createdAt)}</TableCell>
-              <TableCell className="text-right">
-                {onRemoveClick && can(members.remove(member)) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onRemoveClick(member)}
-                    className="h-8 px-2 lg:px-3"
-                  >
-                    Remove
-                  </Button>
-                )}
-              </TableCell>
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Joined</TableHead>
+              <TableHead className="w-[100px] text-right"></TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {data.map((member) => (
+              <TableRow key={member.metadata.id}>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    {member.user.name || '-'}
+                    {member.user.email === user?.email && (
+                      <Badge variant="outline" className="ml-2">
+                        You
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>{member.user.email}</TableCell>
+                <TableCell>{formatRole(member.role)}</TableCell>
+                <TableCell>{formatDate(member.metadata.createdAt)}</TableCell>
+                <TableCell className="text-right">
+                  {can(members.remove(member)) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setRemoveMember(member)}
+                      className="h-8 px-2 lg:px-3"
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {invites && invites.length > 0 && (
+        <>
+          <Separator className="my-8" />
+
+          <h3 className="text-xl font-semibold leading-tight text-foreground mb-4">
+            Pending Invitations
+          </h3>
+          <InvitesTable
+            data={invites}
+            isLoading={isLoadingInvites}
+            onRevokeClick={(invite) => {
+              setRevokeInvite(invite);
+            }}
+            emptyState={
+              <div className="flex flex-col items-center justify-center gap-4 py-8">
+                <p className="text-sm text-muted-foreground">
+                  No pending invitations.
+                </p>
+              </div>
+            }
+          />
+        </>
+      )}
+
+      {removeMember && (
+        <RemoveMemberForm
+          member={removeMember}
+          close={() => {
+            setRemoveMember(null);
+            refetch();
+          }}
+        />
+      )}
+
+      {revokeInvite && (
+        <RevokeInviteForm
+          invite={revokeInvite}
+          close={() => {
+            setRevokeInvite(null);
+          }}
+        />
+      )}
+    </>
   );
 }
 

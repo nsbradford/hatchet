@@ -44,7 +44,7 @@ export function DocsButton({
     <Button variant={variant} {...props} size={size} onClick={handleClick}>
       <BookOpenIcon className={cn('w-4 h-4', size === 'icon' && 'w-6 h-6')} />
       {size !== 'icon' && (
-        <span className="hidden md:block">
+        <span>
           {prefix} {doc.title}
         </span>
       )}

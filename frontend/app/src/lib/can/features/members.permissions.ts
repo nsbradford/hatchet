@@ -1,13 +1,34 @@
 import { PermissionSet, RejectReason } from '@/lib/can';
 import { TenantMember, TenantMemberRole } from '@/lib/api';
 
-const RANK: Record<TenantMemberRole, number> = {
+export const RANK: Record<TenantMemberRole, number> = {
   [TenantMemberRole.MEMBER]: 0,
   [TenantMemberRole.ADMIN]: 1,
   [TenantMemberRole.OWNER]: 2,
 };
 
 export const members: PermissionSet = {
+  view:
+    () =>
+    ({ membership }) => {
+      if (!membership) {
+        return {
+          allowed: false,
+          reason: RejectReason.ROLE_REQUIRED,
+          message: 'You must be logged in to view members',
+        };
+      }
+
+      if (RANK[membership] >= RANK[TenantMemberRole.ADMIN]) {
+        return { allowed: true };
+      }
+
+      return {
+        allowed: false,
+        reason: RejectReason.ROLE_REQUIRED,
+        message: 'You do not have permission to view members',
+      };
+    },
   remove:
     (targetMember: TenantMember) =>
     ({ membership, user }) => {
@@ -37,7 +58,6 @@ export const members: PermissionSet = {
         message: 'You do not have permission to remove this member',
       };
     },
-
   invite:
     (role: TenantMemberRole) =>
     ({ membership }) => {
@@ -49,7 +69,10 @@ export const members: PermissionSet = {
         };
       }
 
-      if (RANK[membership] >= RANK[role]) {
+      if (
+        RANK[membership] >= RANK[role] &&
+        RANK[membership] >= RANK[TenantMemberRole.ADMIN]
+      ) {
         return { allowed: true };
       }
 

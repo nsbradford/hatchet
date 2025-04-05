@@ -1,25 +1,12 @@
 import { RouteObject } from 'react-router-dom';
 import AuthenticatedGuard from './authenticated.guard.tsx';
 import { dashboardRoutes } from './dashboard/dashboard.router.tsx';
-import OnboardingNewPage from './onboarding/new/new.page.tsx';
+import { onboardingRoutes } from './onboarding/onboarding.router.tsx';
+
 export const authenticatedRoutes: RouteObject[] = [
   {
     path: '/',
     element: <AuthenticatedGuard />,
-    children: [...dashboardRoutes],
-  },
-  {
-    path: '/onboarding/new',
-    element: <OnboardingNewPage />,
+    children: [...dashboardRoutes, ...onboardingRoutes],
   },
 ];
-
-// {
-//     path: '/',
-//     lazy: async () =>
-//       import('./pages/authenticated/authenticated.tsx').then((res) => {
-//         return {
-//           Component: res.default,
-//         };
-//       }),
-//   },
