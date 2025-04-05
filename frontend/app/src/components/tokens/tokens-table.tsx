@@ -20,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useApiTokensContext } from '@/hooks/use-api-tokens';
 import { Skeleton } from '@/components/ui/skeleton';
-import { apiTokens } from '@/lib/can/features/api-tokens';
+import { apiTokens } from '@/lib/can/features/api-tokens.permissions';
 import useCan from '@/hooks/use-can';
 import {
   ArrowDownIcon,

@@ -10,7 +10,7 @@ import { RevokeTokenForm } from './components/revoke-token-form';
 import { DocsButton } from '@/components/ui/docs-button';
 import useCan from '@/hooks/use-can';
 import docs from '@/docs-meta-data';
-import { apiTokens } from '@/lib/can/features/api-tokens';
+import { apiTokens } from '@/lib/can/features/api-tokens.permissions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Lock } from 'lucide-react';
 export default function ApiTokensPage() {
