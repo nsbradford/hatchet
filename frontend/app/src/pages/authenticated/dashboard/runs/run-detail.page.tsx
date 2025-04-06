@@ -9,6 +9,7 @@ import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { RunChildrenCardRoot } from '@/components/runs/run-children';
+import { RunOutputCard } from '@/components/runs/run-output-card';
 
 export default function RunDetailPage() {
   const { runId } = useParams<{ runId: string }>();
@@ -99,11 +100,11 @@ export default function RunDetailPage() {
         {/* <RunInputCard input={run.input} /> */}
       </div>
 
-      {/* <RunOutputCard
+      <RunOutputCard
         output={run.output}
         errorMessage={run.errorMessage}
         status={run.status}
-      /> */}
+      />
     </div>
   );
 }

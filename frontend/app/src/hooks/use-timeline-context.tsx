@@ -4,12 +4,15 @@ import {
   useState,
   ReactNode,
   useCallback,
+  useMemo,
 } from 'react';
-
+import { V1WorkflowRun } from '@/lib/api';
 interface TimelineContextState {
-  earliest: number | undefined;
+  earliest: number;
   latest: number | undefined;
-  updateTimeRange: (earliestTime: number, latestTime: number) => void;
+  updateTimeRange: (item: V1WorkflowRun) => void;
+  resetTimeRange: () => void;
+  timeRange: number;
 }
 
 const TimelineContext = createContext<TimelineContextState | null>(null);
@@ -19,30 +22,51 @@ interface TimelineProviderProps {
 }
 
 export function TimelineProvider({ children }: TimelineProviderProps) {
-  const [earliest, setEarliest] = useState<number | undefined>(undefined);
+  const [earliest, setEarliest] = useState<number>(Date.now());
   const [latest, setLatest] = useState<number | undefined>(undefined);
 
   const updateTimeRange = useCallback(
-    (earliestTime: number, latestTime: number) => {
-      setEarliest((prev) =>
-        prev === undefined || earliestTime < prev ? earliestTime : prev,
-      );
+    (item: V1WorkflowRun) => {
+      const times = [item.createdAt, item.startedAt, item.finishedAt].reduce<
+        number[]
+      >((acc, time) => {
+        if (time) {
+          acc.push(new Date(time).getTime());
+        }
+        return acc;
+      }, []);
 
-      setLatest((prev) =>
-        prev === undefined || latestTime > prev ? latestTime : prev,
-      );
+      const earliestTime = Math.min(...times);
+      const latestTime = Math.max(...times);
 
-      return () => {
-        // Reset function if needed
-      };
+      if (earliestTime < earliest) {
+        setEarliest(earliestTime);
+      }
+      if (latest === undefined || latestTime > latest) {
+        setLatest(latestTime);
+      }
     },
-    [], // No dependencies needed with functional updates
+    [earliest, latest, setEarliest, setLatest],
   );
+
+  const timeRange = useMemo(() => {
+    if (latest === undefined || earliest === undefined) {
+      return 1;
+    }
+    return latest - earliest;
+  }, [latest, earliest]);
+
+  const resetTimeRange = useCallback(() => {
+    setEarliest(Date.now());
+    setLatest(undefined);
+  }, [setEarliest, setLatest]);
 
   const value = {
     earliest,
     latest,
     updateTimeRange,
+    timeRange,
+    resetTimeRange,
   };
 
   return (

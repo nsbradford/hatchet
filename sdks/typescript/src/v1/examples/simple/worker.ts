@@ -8,14 +8,14 @@ async function main() {
     // 👀 Declare the workflows that the worker can execute
     workflows: [simple, parent, child, leaf],
     // 👀 Declare the number of concurrent task runs the worker can accept
-    slots: 100,
+    slots: 3,
   });
 
   const stop = worker.start();
   const runs = [];
 
   try {
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 1; i++) {
       const run = await parent.runNoWait({ Message: 'Hello, world!' });
       runs.push(run);
     }

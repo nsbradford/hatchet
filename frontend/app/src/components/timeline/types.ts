@@ -11,6 +11,6 @@ export interface TimelineProps {
 export interface TimelineItemProps {
   item: V1WorkflowRun;
   onClick?: () => void;
-  globalStartTime?: number;
+  globalStartTime: number;
   globalEndTime?: number;
 }

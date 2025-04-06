@@ -1,10 +1,6 @@
 import { useRunDetail } from '@/hooks/use-run-detail';
 import useRuns, { RunsProvider } from '@/hooks/use-runs';
-import {
-  V1WorkflowRun,
-  V1WorkflowRunDetails,
-  WorkflowRunOrderByField,
-} from '@/lib/api';
+import { V1WorkflowRunDetails, WorkflowRunOrderByField } from '@/lib/api';
 import { Link } from 'react-router-dom';
 import { PropsWithChildren, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -32,40 +28,6 @@ function RunRow({
   run,
   isTitle,
 }: Partial<RunRowProps> & { isTitle?: boolean }) {
-  // Use run directly as timeline item
-  const timelineItems = useMemo(() => {
-    const items: V1WorkflowRun[] = [];
-
-    if (!run) {
-      return items;
-    }
-
-    // Add the run itself if it has started
-    if (run.startedAt) {
-      items.push({
-        ...run,
-        // Ensure we have both startedAt and finishedAt for proper rendering
-        finishedAt: run.finishedAt || undefined, // Use undefined instead of null if not finished
-      });
-    }
-
-    // Add a separate object for the created event if needed
-    if (
-      run.createdAt &&
-      (!run.startedAt ||
-        new Date(run.createdAt).getTime() < new Date(run.startedAt).getTime())
-    ) {
-      items.push({
-        ...run,
-        // Force this item to be treated as a creation event
-        startedAt: undefined,
-        finishedAt: undefined,
-      });
-    }
-
-    return items;
-  }, [run]);
-
   return (
     <div
       className="grid grid-cols-[1fr,600px] items-center"
@@ -75,7 +37,7 @@ function RunRow({
         {run && <Link to={`/runs/${run.metadata.id}`}>{run.displayName}</Link>}
       </div>
       <Timeline
-        items={timelineItems}
+        items={run ? [run] : []}
         showLabels={false}
         height={28}
         showTimeLabels={isTitle}
@@ -105,26 +67,32 @@ function ChildrenList({ run, depth }: RunRowProps) {
 
   return (
     <div className="flex flex-col gap-0">
-      {render?.map((childRun) => (
-        <HighlightGroup key={childRun.metadata.id}>
-          <RunRow run={childRun} depth={depth + 1} />
-          <RunsProvider
-            initialFilters={{
-              sortBy: WorkflowRunOrderByField.StartedAt,
-              sortDirection: 'desc',
-              parentTaskExternalId: childRun.metadata.id,
-              isRootTask: false,
-            }}
-            initialPagination={{
-              currentPage: 1,
-              pageSize: 100,
-            }}
-            refetchInterval={5000}
-          >
-            {depth < 10 && <ChildrenList run={childRun} depth={depth + 1} />}
-          </RunsProvider>
-        </HighlightGroup>
-      ))}
+      {render
+        ?.sort(
+          (a, b) =>
+            new Date(a.startedAt || 0).getTime() -
+            new Date(b.startedAt || 0).getTime(),
+        )
+        .map((childRun) => (
+          <HighlightGroup key={childRun.metadata.id}>
+            <RunRow run={childRun} depth={depth + 1} />
+            <RunsProvider
+              initialFilters={{
+                sortBy: WorkflowRunOrderByField.StartedAt,
+                sortDirection: 'desc',
+                parentTaskExternalId: childRun.metadata.id,
+                isRootTask: true,
+              }}
+              initialPagination={{
+                currentPage: 1,
+                pageSize: 100,
+              }}
+              refetchInterval={5000}
+            >
+              {depth < 10 && <ChildrenList run={childRun} depth={depth + 1} />}
+            </RunsProvider>
+          </HighlightGroup>
+        ))}
       {numHidden > 0 && (
         <div>
           <span>+{numHidden} more</span>

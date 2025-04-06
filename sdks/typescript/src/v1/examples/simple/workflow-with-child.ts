@@ -16,12 +16,12 @@ export const leaf = hatchet.task({
   retries: 3,
   fn: async (input: ChildInput, ctx) => {
     // fail 10% of the time
-    if (Math.random() < 0.1) {
-      throw new Error('Failed to complete task');
-    }
+    // if (Math.random() < 0.1) {
+    //   throw new Error('Failed to complete task');
+    // }
 
     // sleep for a random amount of time between 1 and 10 seconds
-    const sleepTime = 1000 * (Math.random() * 40 + 1);
+    const sleepTime = 1000 * (Math.random() * 5 + 1);
     console.log(`Sleeping for ${sleepTime}ms`);
     await sleep(sleepTime);
     return {
@@ -34,13 +34,13 @@ export const child = hatchet.task({
   name: 'child',
   retries: 3,
   fn: async (input: ChildInput, ctx) => {
-    // fail 10% of the time
-    if (Math.random() < 0.1) {
-      throw new Error('Failed to complete task');
-    }
+    // // fail 10% of the time
+    // if (Math.random() < 0.1) {
+    //   throw new Error('Failed to complete task');
+    // }
 
     const children = [];
-    for (let i = 0; i < Math.floor(Math.random() * 10) + 2; i++) {
+    for (let i = 0; i < Math.floor(Math.random() * 3) + 2; i++) {
       const c = await ctx.runNoWaitChild(leaf, {
         Message: input.Message,
       });
@@ -50,7 +50,7 @@ export const child = hatchet.task({
     const results = await Promise.all(children.map((c) => c.output));
 
     // sleep for a random amount of time between 1 and 10 seconds
-    const sleepTime = 1000 * (Math.random() * 40 + 1);
+    const sleepTime = 1000 * (Math.random() * 5 + 1);
     console.log(`Sleeping for ${sleepTime}ms`);
     await sleep(sleepTime);
     return {
@@ -64,13 +64,13 @@ export const parent = hatchet.task({
   fn: async (input: ParentInput, ctx) => {
     // eslint-disable-next-line no-plusplus
 
-    // fail 10% of the time
-    if (Math.random() < 0.1) {
-      throw new Error('Parent task failed randomly');
-    }
+    // // fail 10% of the time
+    // if (Math.random() < 0.1) {
+    //   throw new Error('Parent task failed randomly');
+    // }
 
     const children = [];
-    for (let i = 0; i < Math.floor(Math.random() * 100) + 10; i++) {
+    for (let i = 0; i < 10; i++) {
       const c = await ctx.runNoWaitChild(child, {
         Message: input.Message,
       });
@@ -79,11 +79,11 @@ export const parent = hatchet.task({
 
     const results = await Promise.all(children.map((c) => c.output));
 
-    const jitter = Math.floor(Math.random() * 1000) + 30000;
+    // const jitter = Math.floor(Math.random() * 1000) + 30000;
 
-    await parent.schedule(new Date(Date.now() + jitter), {
-      Message: input.Message,
-    });
+    // await parent.schedule(new Date(Date.now() + jitter), {
+    //   Message: input.Message,
+    // });
 
     return {
       TransformedMessage: results.map((r) => r.TransformedMessage).join(', '),
