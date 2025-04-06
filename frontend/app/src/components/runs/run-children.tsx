@@ -4,7 +4,11 @@ import { V1WorkflowRunDetails, WorkflowRunOrderByField } from '@/lib/api';
 import { Link } from 'react-router-dom';
 import { PropsWithChildren, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Time } from '@/components/ui/time';
+import { Timeline } from '../timeline';
+
+const MAX_CHILDREN = 10;
+const MAX_DEPTH = 10;
+
 interface RunRowProps {
   run: V1WorkflowRunDetails['run'];
   depth: number;
@@ -19,16 +23,43 @@ function HighlightGroup({ children }: PropsWithChildren) {
 }
 
 function RunRow({ run }: RunRowProps) {
+  // Use run directly as timeline item
+  const timelineItems = useMemo(() => {
+    const items = [];
+
+    // Add the run itself if it has started
+    if (run.startedAt) {
+      items.push(run);
+    }
+
+    // Add a separate object for the created event if needed
+    if (
+      run.createdAt &&
+      (!run.startedAt ||
+        new Date(run.createdAt).getTime() < new Date(run.startedAt).getTime())
+    ) {
+      items.push({
+        ...run,
+        // Force this item to be treated as a creation event
+        // by removing startedAt temporarily if it exists
+        startedAt: undefined,
+      });
+    }
+
+    return items;
+  }, [run]);
+
   return (
     <div className={`flex flex-row gap-2 w-full items-center`}>
       <div className="text-sm text-muted-foreground truncate max-w-[50%] overflow-hidden whitespace-nowrap">
         <Link to={`/runs/${run.metadata.id}`}>{run.displayName}</Link>
       </div>
-      <div className="text-sm text-muted-foreground bg-yellow-500 flex-1">
-        <Time date={run.metadata.createdAt} variant="short" />
-        <Time date={run.startedAt} variant="short" />
-        <Time date={run.finishedAt} variant="short" />
-      </div>
+      <Timeline
+        items={timelineItems}
+        showLabels={false}
+        minWidth={200}
+        height={28}
+      />
     </div>
   );
 }
@@ -36,7 +67,7 @@ function RunRow({ run }: RunRowProps) {
 function ChildrenList({ run, depth }: RunRowProps) {
   const { data, isLoading } = useRuns();
 
-  const [maxChildren, setMaxChildren] = useState(1);
+  const [maxChildren, setMaxChildren] = useState(MAX_CHILDREN);
 
   const [render, numHidden] = useMemo(() => {
     if (data?.length === 0) {
@@ -48,12 +79,12 @@ function ChildrenList({ run, depth }: RunRowProps) {
     return [data.slice(0, maxChildren), numHidden];
   }, [data, maxChildren]);
 
-  if (depth > 10) {
+  if (depth > MAX_DEPTH) {
     return <>More...</>;
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-0">
       {render?.map((childRun) => (
         <HighlightGroup key={childRun.metadata.id}>
           <RunRow run={childRun} depth={depth + 1} />
