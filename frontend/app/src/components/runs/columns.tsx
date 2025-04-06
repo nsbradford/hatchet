@@ -18,6 +18,8 @@ import { DataTableColumnHeader } from './data-table-column-header';
 import { DataTableRowActions } from './data-table-row-actions';
 import { formatDuration, intervalToDuration } from 'date-fns';
 import type { Duration } from 'date-fns';
+import { Code } from '../ui/code';
+import { Link } from 'react-router-dom';
 
 export const statusOptions = [
   { label: 'Pending', value: 'PENDING' },
@@ -105,7 +107,30 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
       <DataTableColumnHeader column={column} title="Run ID" />
     ),
     cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('displayName')}</div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Link
+                to={`/runs/${row.original.metadata.id}`}
+                className="hover:underline text-blue-500"
+              >
+                {row.original.displayName}
+              </Link>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <Code
+              variant="inline"
+              className="font-medium"
+              language={'plaintext'}
+              value={row.original.metadata.id}
+            >
+              {row.original.metadata.id}
+            </Code>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     ),
     enableSorting: true,
     enableHiding: false,

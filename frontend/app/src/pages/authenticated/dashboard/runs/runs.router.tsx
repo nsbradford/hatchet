@@ -10,4 +10,13 @@ export const runsRoutes: RouteObject[] = [
         };
       }),
   },
+  {
+    path: '/runs/:runId',
+    lazy: async () =>
+      import('./run-detail.page').then((res) => {
+        return {
+          Component: res.default,
+        };
+      }),
+  },
 ];

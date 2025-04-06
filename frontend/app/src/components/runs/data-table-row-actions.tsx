@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { V1TaskSummary, V1TaskStatus } from '@/lib/api';
+import { Link } from 'react-router-dom';
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -23,36 +24,40 @@ export function DataTableRowActions<TData>({
   const isRunning = run.status === ('RUNNING' as V1TaskStatus);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem>
-          <FileText className="mr-2 h-4 w-4" />
-          View Details
-        </DropdownMenuItem>
-        {isRunning ? (
-          <DropdownMenuItem>
-            <StopCircle className="mr-2 h-4 w-4" />
-            Cancel Run
+    <span className="group">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link to={`/runs/${run.metadata.id}`}>
+              <FileText className="mr-2 h-4 w-4" />
+              View Details
+            </Link>
           </DropdownMenuItem>
-        ) : run.status !== ('CANCELLED' as V1TaskStatus) &&
-          run.status !== ('FAILED' as V1TaskStatus) ? (
+          {isRunning ? (
+            <DropdownMenuItem>
+              <StopCircle className="mr-2 h-4 w-4" />
+              Cancel Run
+            </DropdownMenuItem>
+          ) : run.status !== ('CANCELLED' as V1TaskStatus) &&
+            run.status !== ('FAILED' as V1TaskStatus) ? (
+            <DropdownMenuItem>
+              <PlayCircle className="mr-2 h-4 w-4" />
+              Re-run
+            </DropdownMenuItem>
+          ) : null}
+          <DropdownMenuSeparator />
           <DropdownMenuItem>
-            <PlayCircle className="mr-2 h-4 w-4" />
-            Re-run
+            <FileText className="mr-2 h-4 w-4" />
+            View Logs
           </DropdownMenuItem>
-        ) : null}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <FileText className="mr-2 h-4 w-4" />
-          View Logs
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </span>
   );
 }
