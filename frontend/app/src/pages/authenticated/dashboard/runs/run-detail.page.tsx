@@ -47,6 +47,11 @@ export default function RunDetailPage() {
     ];
 
     setBreadcrumbs(breadcrumbs);
+
+    // Clear breadcrumbs when this component unmounts
+    return () => {
+      setBreadcrumbs([]);
+    };
   }, [run, runId, setBreadcrumbs]);
 
   if (isLoading) {

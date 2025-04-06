@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { BreadcrumbData, useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 
@@ -154,9 +154,7 @@ export function BreadcrumbNav() {
                     <span className="overflow-hidden text-ellipsis">
                       {item.title}
                     </span>
-                    {item.isLast && (
-                      <ChevronDown className="h-4 w-4 flex-shrink-0 ml-1" />
-                    )}
+                    <ChevronDown className="h-4 w-4 flex-shrink-0 ml-1" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
                     {item.siblings.map((sibling, index) => (
@@ -177,8 +175,11 @@ export function BreadcrumbNav() {
                 </BreadcrumbPage>
               )
             ) : item.siblings ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 font-normal text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+              <div className="group flex items-center">
+                <BreadcrumbLink
+                  to={item.url}
+                  className="flex items-center gap-1 whitespace-nowrap overflow-hidden text-ellipsis"
+                >
                   {(item.isFirst || item.alwaysShowIcon) && item.icon && (
                     <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />
                   )}
@@ -187,23 +188,28 @@ export function BreadcrumbNav() {
                       {item.title}
                     </span>
                   )}
-                  {item.isLast && (
-                    <ChevronDown className="h-4 w-4 flex-shrink-0 ml-1" />
-                  )}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {item.siblings.map((sibling, index) => (
-                    <DropdownMenuItem key={sibling.url + index} asChild>
-                      <BreadcrumbLink to={sibling.url}>
-                        {sibling.icon && (
-                          <sibling.icon className="mr-2 h-4 w-4 flex-shrink-0" />
-                        )}
-                        {sibling.title}
-                      </BreadcrumbLink>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </BreadcrumbLink>
+                <div className="relative w-4 h-4 mx-2 flex items-center justify-center">
+                  <ChevronRight className="absolute h-4 w-4 group-hover:opacity-0 transition-opacity" />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="absolute inset-0 flex items-center justify-center">
+                      <ChevronDown className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {item.siblings.map((sibling, index) => (
+                        <DropdownMenuItem key={sibling.url + index} asChild>
+                          <BreadcrumbLink to={sibling.url}>
+                            {sibling.icon && (
+                              <sibling.icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                            )}
+                            {sibling.title}
+                          </BreadcrumbLink>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
             ) : (
               <BreadcrumbLink
                 to={item.url}
@@ -217,12 +223,9 @@ export function BreadcrumbNav() {
                     {item.title}
                   </span>
                 )}
-                {item.isLast && (
-                  <ChevronDown className="h-4 w-4 flex-shrink-0 ml-1" />
-                )}
               </BreadcrumbLink>
             )}
-            {!item.isLast && <BreadcrumbSeparator />}
+            {!item.isLast && !item.siblings && <BreadcrumbSeparator />}
           </BreadcrumbItem>
         ))}
       </BreadcrumbList>
