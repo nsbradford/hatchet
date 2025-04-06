@@ -147,9 +147,9 @@ export function BreadcrumbNav() {
             {item.isLast ? (
               item.siblings ? (
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-1 font-normal text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+                  <DropdownMenuTrigger className="flex items-center gap-2 font-normal text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
                     {(item.isFirst || item.alwaysShowIcon) && item.icon && (
-                      <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
                     )}
                     <span className="overflow-hidden text-ellipsis">
                       {item.title}
@@ -159,9 +159,12 @@ export function BreadcrumbNav() {
                   <DropdownMenuContent align="start">
                     {item.siblings.map((sibling, index) => (
                       <DropdownMenuItem key={sibling.url + index} asChild>
-                        <BreadcrumbLink to={sibling.url}>
+                        <BreadcrumbLink
+                          to={sibling.url}
+                          className="flex items-center gap-2"
+                        >
                           {sibling.icon && (
-                            <sibling.icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                            <sibling.icon className="h-4 w-4 flex-shrink-0" />
                           )}
                           {sibling.title}
                         </BreadcrumbLink>
@@ -170,18 +173,25 @@ export function BreadcrumbNav() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <BreadcrumbPage className="whitespace-nowrap overflow-hidden text-ellipsis">
-                  {item.title}
+                <BreadcrumbPage className="whitespace-nowrap overflow-hidden text-ellipsis inline-flex items-center gap-2">
+                  {(item.isFirst || item.alwaysShowIcon) && item.icon && (
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                  )}
+                  {(item.alwaysShowTitle || !(item.isFirst || isMobile)) && (
+                    <span className="overflow-hidden text-ellipsis">
+                      {item.title}
+                    </span>
+                  )}
                 </BreadcrumbPage>
               )
             ) : item.siblings ? (
               <div className="group flex items-center">
                 <BreadcrumbLink
                   to={item.url}
-                  className="flex items-center gap-1 whitespace-nowrap overflow-hidden text-ellipsis"
+                  className="flex items-center gap-2 whitespace-nowrap overflow-hidden text-ellipsis"
                 >
                   {(item.isFirst || item.alwaysShowIcon) && item.icon && (
-                    <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
                   )}
                   {(item.alwaysShowTitle || !(item.isFirst || isMobile)) && (
                     <span className="overflow-hidden text-ellipsis">
@@ -198,9 +208,12 @@ export function BreadcrumbNav() {
                     <DropdownMenuContent align="start">
                       {item.siblings.map((sibling, index) => (
                         <DropdownMenuItem key={sibling.url + index} asChild>
-                          <BreadcrumbLink to={sibling.url}>
+                          <BreadcrumbLink
+                            to={sibling.url}
+                            className="flex items-center gap-2"
+                          >
                             {sibling.icon && (
-                              <sibling.icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                              <sibling.icon className="h-4 w-4 flex-shrink-0" />
                             )}
                             {sibling.title}
                           </BreadcrumbLink>
@@ -213,10 +226,10 @@ export function BreadcrumbNav() {
             ) : (
               <BreadcrumbLink
                 to={item.url}
-                className="whitespace-nowrap overflow-hidden text-ellipsis inline-flex items-center"
+                className="whitespace-nowrap overflow-hidden text-ellipsis inline-flex items-center gap-2"
               >
                 {(item.isFirst || item.alwaysShowIcon) && item.icon && (
-                  <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
                 )}
                 {(item.alwaysShowTitle || !(item.isFirst || isMobile)) && (
                   <span className="overflow-hidden text-ellipsis">
