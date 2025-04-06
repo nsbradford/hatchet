@@ -21,7 +21,7 @@ export default function useAlerter(): AlerterState {
         (invite) =>
           ({
             id: invite.metadata.id,
-            createdAt: new Date(invite.createdAt),
+            createdAt: new Date(invite.metadata.createdAt),
             invite,
           }) as Alert,
       ),

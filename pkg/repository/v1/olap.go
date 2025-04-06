@@ -64,6 +64,8 @@ type ListWorkflowRunOpts struct {
 	Offset int64
 
 	ParentTaskExternalId *pgtype.UUID
+
+	IsRootTask bool
 }
 
 type ReadTaskRunMetricsOpts struct {
@@ -634,6 +636,7 @@ func (r *OLAPRepositoryImpl) ListWorkflowRuns(ctx context.Context, tenantId stri
 		Listworkflowrunslimit:  int32(opts.Limit),
 		Listworkflowrunsoffset: int32(opts.Offset),
 		ParentTaskExternalId:   pgtype.UUID{},
+		IsRootTask:             pgtype.Bool{Bool: opts.IsRootTask, Valid: true},
 	}
 
 	countParams := sqlcv1.CountWorkflowRunsParams{

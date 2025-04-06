@@ -107,6 +107,10 @@ WHERE
         sqlc.narg('parentTaskExternalId')::UUID IS NULL
         OR parent_task_external_id = sqlc.narg('parentTaskExternalId')::UUID
     )
+    AND (
+        sqlc.narg('isRootTask')::boolean IS TRUE
+        AND parent_task_external_id IS NULL
+    )
 ORDER BY inserted_at DESC, id DESC
 LIMIT @listWorkflowRunsLimit::integer
 OFFSET @listWorkflowRunsOffset::integer

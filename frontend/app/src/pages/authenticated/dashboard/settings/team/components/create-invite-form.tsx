@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { TenantMemberRole } from '@/lib/api/generated/data-contracts';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import useMembers from '@/hooks/use-members';
 import { SendIcon } from 'lucide-react';
 import useCan from '@/hooks/use-can';
@@ -70,19 +70,22 @@ export function CreateInviteForm({ className, close }: CreateInviteFormProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Function to check if a role is allowed
-  const isRoleAllowed = (role: TenantMemberRole) => {
-    return canWithReason(members.invite(role)).allowed;
-  };
+  const isRoleAllowed = useCallback(
+    (role: TenantMemberRole) => {
+      return canWithReason(members.invite(role)).allowed;
+    },
+    [canWithReason],
+  );
 
   // Get the list of allowed roles
   const allowedRoles = useMemo(() => {
     return ALL_ROLES.filter(isRoleAllowed);
-  }, [canWithReason]);
+  }, [isRoleAllowed]);
 
   // Find the highest role the user can invite
-  const getDefaultRole = () => {
+  const getDefaultRole = useCallback(() => {
     return allowedRoles[0] || TenantMemberRole.MEMBER; // Default to MEMBER if nothing is allowed
-  };
+  }, [allowedRoles]);
 
   const {
     register,

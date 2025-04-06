@@ -1846,6 +1846,9 @@ type V1WorkflowRunListParams struct {
 
 	// ParentTaskExternalId The parent task external id to filter by
 	ParentTaskExternalId *openapi_types.UUID `form:"parent_task_external_id,omitempty" json:"parent_task_external_id,omitempty"`
+
+	// IsRootTask The task has no parent task
+	IsRootTask *bool `form:"is_root_task,omitempty" json:"is_root_task,omitempty"`
 }
 
 // V1WorkflowRunDisplayNamesListParams defines parameters for V1WorkflowRunDisplayNamesList.
@@ -5372,6 +5375,22 @@ func NewV1WorkflowRunListRequest(server string, tenant openapi_types.UUID, param
 		if params.ParentTaskExternalId != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "parent_task_external_id", runtime.ParamLocationQuery, *params.ParentTaskExternalId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.IsRootTask != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "is_root_task", runtime.ParamLocationQuery, *params.IsRootTask); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err

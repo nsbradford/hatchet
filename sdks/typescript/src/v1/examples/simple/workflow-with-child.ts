@@ -1,4 +1,5 @@
 // ❓ Declaring a Task
+import sleep from '@hatchet/util/sleep';
 import { hatchet } from '../hatchet-client';
 
 // (optional) Define the input type for the workflow
@@ -12,7 +13,17 @@ export type ParentInput = {
 
 export const child = hatchet.task({
   name: 'child',
-  fn: (input: ChildInput) => {
+  retries: 3,
+  fn: async (input: ChildInput, ctx) => {
+    // fail 10% of the time
+    if (Math.random() < 0.1) {
+      throw new Error('Failed to complete task');
+    }
+
+    // sleep for a random amount of time between 1 and 10 seconds
+    const sleepTime = 1000 * (Math.random() * 40 + 1);
+    console.log(`Sleeping for ${sleepTime}ms`);
+    await sleep(sleepTime);
     return {
       TransformedMessage: input.Message.toLowerCase(),
     };
@@ -22,12 +33,26 @@ export const child = hatchet.task({
 export const parent = hatchet.task({
   name: 'parent',
   fn: async (input: ParentInput, ctx) => {
-    const c = await ctx.runChild(child, {
+    // eslint-disable-next-line no-plusplus
+
+    const children = [];
+    for (let i = 0; i < Math.floor(Math.random() * 100) + 10; i++) {
+      const c = await ctx.runNoWaitChild(child, {
+        Message: input.Message,
+      });
+      children.push(c);
+    }
+
+    const results = await Promise.all(children.map((c) => c.output));
+
+    const jitter = Math.floor(Math.random() * 1000) + 30000;
+
+    await parent.schedule(new Date(Date.now() + jitter), {
       Message: input.Message,
     });
 
     return {
-      TransformedMessage: c.TransformedMessage,
+      TransformedMessage: results.map((r) => r.TransformedMessage).join(', '),
     };
   },
 });

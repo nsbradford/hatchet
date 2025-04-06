@@ -312,6 +312,8 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
        * @maxLength 36
        */
       parent_task_external_id?: string;
+      /** The task has no parent task */
+      is_root_task?: boolean;
     },
     params: RequestParams = {},
   ) =>

@@ -162,6 +162,9 @@ WHERE
         $10::UUID IS NULL
         OR parent_task_external_id = $10::UUID
     )
+	AND (
+		($11::boolean IS NOT TRUE OR parent_task_external_id IS NULL)
+	)
 
 ORDER BY inserted_at DESC, id DESC
 LIMIT $9::integer
@@ -179,6 +182,7 @@ type FetchWorkflowRunIdsParams struct {
 	Listworkflowrunsoffset int32              `json:"listworkflowrunsoffset"`
 	Listworkflowrunslimit  int32              `json:"listworkflowrunslimit"`
 	ParentTaskExternalId   pgtype.UUID        `json:"parentTaskExternalId"`
+	IsRootTask             pgtype.Bool        `json:"isRootTask"`
 }
 
 type FetchWorkflowRunIdsRow struct {
@@ -200,6 +204,7 @@ func (q *Queries) FetchWorkflowRunIds(ctx context.Context, db DBTX, arg FetchWor
 		arg.Listworkflowrunsoffset,
 		arg.Listworkflowrunslimit,
 		arg.ParentTaskExternalId,
+		arg.IsRootTask,
 	)
 
 	if err != nil {

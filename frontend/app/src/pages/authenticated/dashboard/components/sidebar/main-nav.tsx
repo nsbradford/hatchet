@@ -64,15 +64,15 @@ export const getMainNavLinks = (currentPath: string): NavStructure => {
         items: [
           {
             title: 'Scheduled Runs',
-            url: '/scheduled-runs',
+            url: '/scheduled',
             icon: Calendar,
-            isActive: isActive('/scheduled-runs'),
+            isActive: isActive('/scheduled'),
           },
           {
             title: 'Cron Jobs',
-            url: '/cron-jobs',
+            url: '/crons',
             icon: Clock,
-            isActive: isActive('/cron-jobs'),
+            isActive: isActive('/crons'),
           },
         ],
       },
@@ -86,10 +86,10 @@ export const getMainNavLinks = (currentPath: string): NavStructure => {
             isActive: isActive('/tasks'),
           },
           {
-            title: 'Workers',
-            url: '/workers',
+            title: 'Worker Pools',
+            url: '/pools',
             icon: Cpu,
-            isActive: isActive('/workers'),
+            isActive: isActive('/pools'),
           },
           {
             title: 'Rate Limits',

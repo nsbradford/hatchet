@@ -2,6 +2,12 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const badgeVariants = cva(
   'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
@@ -15,21 +21,55 @@ const badgeVariants = cva(
         destructive:
           'border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80',
         outline: 'text-foreground',
+        small: 'w-3 h-3 p-0 rounded-sm border-transparent',
+      },
+      animated: {
+        true: 'animate-pulse',
+        false: '',
       },
     },
     defaultVariants: {
       variant: 'default',
+      animated: false,
     },
   },
 );
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+    VariantProps<typeof badgeVariants> {
+  tooltipContent?: React.ReactNode;
+}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
+function Badge({
+  className,
+  variant,
+  animated,
+  tooltipContent,
+  ...props
+}: BadgeProps) {
+  // If it's the small variant and tooltip content is provided
+  if (variant === 'small' && tooltipContent) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(badgeVariants({ variant, animated }), className)}
+              {...props}
+            />
+          </TooltipTrigger>
+          <TooltipContent>{tooltipContent}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div
+      className={cn(badgeVariants({ variant, animated }), className)}
+      {...props}
+    />
   );
 }
 

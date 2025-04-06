@@ -92,6 +92,12 @@ listWorkflowRuns:
           format: uuid
           minLength: 36
           maxLength: 36
+      - description: The task has no parent task
+        in: query
+        name: is_root_task
+        required: false
+        schema:
+          type: boolean
     responses:
       "200":
         content:

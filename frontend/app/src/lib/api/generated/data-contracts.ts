@@ -639,8 +639,6 @@ export interface UserTenantMembershipsList {
 }
 
 export interface TenantInvite {
-  status: string;
-  createdAt: string | number | Date;
   metadata: APIResourceMeta;
   /** The email of the user to invite. */
   email: string;

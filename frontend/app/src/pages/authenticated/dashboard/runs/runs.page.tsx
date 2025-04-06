@@ -1,19 +1,26 @@
-import useRuns from '@/hooks/use-runs';
+import { RunsTable } from '@/components/runs/runs-table';
+import { RunsProvider } from '@/hooks/use-runs';
+import { WorkflowRunOrderByField } from '@/lib/api';
 
 export default function RunsPage() {
-  const { data } = useRuns();
-
   return (
-    <>
-      {JSON.stringify(data)}
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-          <div className="aspect-video rounded-xl bg-muted/50" />
-          <div className="aspect-video rounded-xl bg-muted/50" />
-          <div className="aspect-video rounded-xl bg-muted/50" />
-        </div>
-        <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+    <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="rounded-lg bg-card p-4">
+        <RunsProvider
+          initialFilters={{
+            sortBy: WorkflowRunOrderByField.StartedAt,
+            sortDirection: 'desc',
+            isRootTask: true,
+          }}
+          initialPagination={{
+            currentPage: 1,
+            pageSize: 100,
+          }}
+          refetchInterval={5000}
+        >
+          <RunsTable />
+        </RunsProvider>
       </div>
-    </>
+    </div>
   );
 }

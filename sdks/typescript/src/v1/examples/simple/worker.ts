@@ -11,7 +11,20 @@ async function main() {
     slots: 100,
   });
 
-  await worker.start();
+  const stop = worker.start();
+  const runs = [];
+
+  for (let i = 0; i < 2; i++) {
+    const run = await parent.runNoWait({ Message: 'Hello, world!' });
+    runs.push(run);
+  }
+
+  const results = await Promise.all(runs.map((r) => r.output));
+
+  console.log(results);
+
+  // worker.stop();
+  await stop;
 }
 
 if (require.main === module) {

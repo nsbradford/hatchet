@@ -1,6 +1,7 @@
 package workflowruns
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
@@ -32,6 +33,7 @@ func (t *V1WorkflowRunsService) WithDags(ctx echo.Context, request gen.V1Workflo
 		workflowIds       = []uuid.UUID{}
 		limit       int64 = 50
 		offset      int64
+		isRootTask  bool = false
 	)
 
 	if request.Params.Statuses != nil {
@@ -55,10 +57,15 @@ func (t *V1WorkflowRunsService) WithDags(ctx echo.Context, request gen.V1Workflo
 		workflowIds = *request.Params.WorkflowIds
 	}
 
+	if request.Params.IsRootTask != nil && *request.Params.IsRootTask {
+		isRootTask = true
+	}
+
 	opts := v1.ListWorkflowRunOpts{
 		CreatedAfter: since,
 		Statuses:     statuses,
 		WorkflowIds:  workflowIds,
+		IsRootTask:   isRootTask,
 		Limit:        limit,
 		Offset:       offset,
 	}
@@ -103,6 +110,8 @@ func (t *V1WorkflowRunsService) WithDags(ctx echo.Context, request gen.V1Workflo
 			dagExternalIds = append(dagExternalIds, dag.ExternalID)
 		}
 	}
+
+	fmt.Println(dagExternalIds)
 
 	tasks, taskIdToDagExternalId, err := t.config.V1.OLAP().ListTasksByDAGId(
 		ctx.Request().Context(),

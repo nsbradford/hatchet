@@ -5,7 +5,7 @@ import { runsRoutes } from './runs/runs.router';
 import { scheduledRunsRoutes } from './scheduled-runs/scheduled-runs.router';
 import { cronJobsRoutes } from './cron-jobs/cron-jobs.router';
 import { tasksRoutes } from './tasks/tasks.router';
-import { workersRoutes } from './workers/workers.router';
+import { workerPoolsRoutes } from './worker-pools/worker-pools.router';
 import { rateLimitsRoutes } from './rate-limits/rate-limits.router';
 
 export const dashboardRoutes: RouteObject[] = [
@@ -21,7 +21,7 @@ export const dashboardRoutes: RouteObject[] = [
       ...scheduledRunsRoutes,
       ...cronJobsRoutes,
       ...tasksRoutes,
-      ...workersRoutes,
+      ...workerPoolsRoutes,
       ...rateLimitsRoutes,
       ...settingsRoutes,
     ],
