@@ -20,10 +20,10 @@ import useUser from '@/hooks/use-user';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import useMembers from '@/hooks/use-members';
-import { RemoveMemberForm } from '@/pages/authenticated/dashboard/settings/members/components/remove-member-form';
-import { RevokeInviteForm } from '@/pages/authenticated/dashboard/settings/members/components/revoke-invite-form';
+import { RemoveMemberForm } from '@/pages/authenticated/dashboard/settings/team/components/remove-member-form';
+import { RevokeInviteForm } from '@/pages/authenticated/dashboard/settings/team/components/revoke-invite-form';
 import { Separator } from '@radix-ui/react-separator';
-import { InvitesTable } from '@/pages/authenticated/dashboard/settings/members/components/invites-table';
+import { InvitesTable } from '@/pages/authenticated/dashboard/settings/team/components/invites-table';
 
 interface MembersTableProps {
   emptyState?: React.ReactNode;

@@ -33,9 +33,9 @@ export const settingsRoutes: RouteObject[] = [
       }),
   },
   {
-    path: '/settings/members',
+    path: '/settings/team',
     lazy: async () =>
-      import('./members/members.page').then((res) => {
+      import('./team/team.page').then((res) => {
         return {
           Component: res.default,
         };

@@ -256,10 +256,19 @@ export function CreateInviteForm({ className, close }: CreateInviteFormProps) {
                 <div className="text-sm text-destructive">{roleError}</div>
               )}
             </div>
-            <Button loading={invite.isPending}>
-              <SendIcon className="mr-2 h-4 w-4" />
-              Send Invite{emailCount > 1 ? 's' : ''}
-            </Button>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={close}
+                disabled={invite.isPending}
+              >
+                Cancel
+              </Button>
+              <Button loading={invite.isPending}>
+                <SendIcon className="mr-2 h-4 w-4" />
+                Send Invite{emailCount > 1 ? 's' : ''}
+              </Button>
+            </div>
           </div>
         </form>
       </div>

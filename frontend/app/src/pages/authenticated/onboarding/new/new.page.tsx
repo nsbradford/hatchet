@@ -32,7 +32,7 @@ interface TenantFormValues {
 }
 
 export default function OnboardingNewPage() {
-  const { createTenant, setTenant } = useTenant();
+  const { create: createTenant, setTenant } = useTenant();
   const { data: user } = useUser();
   const {
     register,

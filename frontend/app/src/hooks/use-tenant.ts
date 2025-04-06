@@ -19,13 +19,11 @@ interface TenantState {
   membership?: TenantMember['role'];
   isLoading: boolean;
   setTenant: (tenant: Tenant | string) => void;
-  createTenant: UseMutationResult<Tenant, Error, string, unknown>;
-  updateTenant: UseMutationResult<
-    Tenant,
-    Error,
-    { id: string; data: UpdateTenantRequest },
-    unknown
-  >;
+  create: UseMutationResult<Tenant, Error, string, unknown>;
+  update: {
+    mutate: (data: UpdateTenantRequest) => void;
+    isPending: boolean;
+  };
 }
 
 export default function useTenant(): TenantState {
@@ -44,43 +42,6 @@ export default function useTenant(): TenantState {
     },
     [searchParams, setSearchParams],
   );
-
-  const createTenantMutation = useMutation({
-    mutationKey: ['tenant:create'],
-    mutationFn: async (name: string): Promise<Tenant> => {
-      const tenantData: CreateTenantRequest = {
-        name,
-        slug: name, // Using name as slug since it's required and already validated
-      };
-
-      const response = await api.tenantCreate(tenantData);
-      return response.data;
-    },
-    onSuccess: async (data) => {
-      await queryClient.invalidateQueries({ queryKey: ['user:*'] });
-      setTenant(data);
-      return data;
-    },
-  });
-
-  const updateTenantMutation = useMutation({
-    mutationKey: ['tenant:update'],
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdateTenantRequest;
-    }): Promise<Tenant> => {
-      const response = await api.tenantUpdate(id, data);
-      return response.data;
-    },
-    onSuccess: (data) => {
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      return data;
-    },
-  });
 
   const membership = useMemo(() => {
     const tenantId =
@@ -108,12 +69,52 @@ export default function useTenant(): TenantState {
     return matched;
   }, [memberships, searchParams, setTenant]);
 
+  const tenant = membership?.tenant;
+
+  // Mutation for creating a tenant
+  const createTenantMutation = useMutation({
+    mutationKey: ['tenant:create'],
+    mutationFn: async (name: string): Promise<Tenant> => {
+      const tenantData: CreateTenantRequest = {
+        name,
+        slug: name, // Using name as slug since it's required and already validated
+      };
+
+      const response = await api.tenantCreate(tenantData);
+      return response.data;
+    },
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ['user:*'] });
+      setTenant(data);
+      return data;
+    },
+  });
+
+  // Mutation for updating tenant details
+  const updateTenantMutation = useMutation({
+    mutationKey: ['tenant:update', tenant?.metadata.id],
+    mutationFn: async (data: UpdateTenantRequest) => {
+      if (!tenant?.metadata.id) {
+        throw new Error('Tenant not found');
+      }
+      const response = await api.tenantUpdate(tenant.metadata.id, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user:*'] });
+      window.location.reload();
+    },
+  });
+
   return {
-    tenant: membership?.tenant,
+    tenant,
     isLoading: isUserLoading,
     membership: membership?.role,
     setTenant,
-    createTenant: createTenantMutation,
-    updateTenant: updateTenantMutation,
+    create: createTenantMutation,
+    update: {
+      mutate: (data: UpdateTenantRequest) => updateTenantMutation.mutate(data),
+      isPending: updateTenantMutation.isPending,
+    },
   };
 }

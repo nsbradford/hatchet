@@ -38,7 +38,7 @@ function MembersContent() {
       disabled={!canInvite}
     >
       <UserPlus className="mr-2 h-4 w-4" />
-      Invite Member
+      Invite
     </Button>
   );
 
@@ -47,7 +47,7 @@ function MembersContent() {
       <div className="mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-row justify-between items-center">
           <h2 className="text-2xl font-semibold leading-tight text-foreground">
-            Members
+            Team
           </h2>
           <div className="flex flex-row items-center gap-2">
             {/* <DocsButton doc={docs.home.setup} size="icon" /> */}

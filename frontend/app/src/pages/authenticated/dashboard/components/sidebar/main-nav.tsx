@@ -11,7 +11,10 @@ import {
   Play,
   Scale,
   Settings,
+  User,
   Users,
+  Users2,
+  UsersIcon,
 } from 'lucide-react';
 import { FaDiscord, FaPlay } from 'react-icons/fa';
 
@@ -102,34 +105,34 @@ export const getMainNavLinks = (currentPath: string): NavStructure => {
         label: 'Settings',
         items: [
           {
-            title: 'General',
+            title: 'API Tokens',
+            url: '/settings/api-tokens',
+            icon: Key,
+            isActive: isActive('/settings/api-tokens'),
+          },
+          {
+            title: 'Team',
+            url: '/settings/team',
+            icon: Users,
+            isActive: isActive('/settings/team'),
+          },
+          {
+            title: 'More Settings',
             url: '/settings',
             icon: Settings,
             isActive: isActive('/settings'),
             items: [
               {
-                title: 'Overview',
+                title: 'Tenant Settings',
                 url: '/settings/overview',
-                icon: Settings,
+                icon: UsersIcon,
                 isActive: isActive('/settings/overview'),
-              },
-              {
-                title: 'API Tokens',
-                url: '/settings/api-tokens',
-                icon: Key,
-                isActive: isActive('/settings/api-tokens'),
               },
               {
                 title: 'Github',
                 url: '/settings/github',
                 icon: Github,
                 isActive: isActive('/settings/github'),
-              },
-              {
-                title: 'Members',
-                url: '/settings/members',
-                icon: Users,
-                isActive: isActive('/settings/members'),
               },
               {
                 title: 'Resource Limits',
