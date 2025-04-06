@@ -46,12 +46,14 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
     cell: ({ row }) => {
       const status = row.getValue('status') as V1TaskStatus;
       return (
-        <Badge
-          className={getStatusBadgeColor(status)}
-          variant="small"
-          tooltipContent={status}
-          animated={status === 'RUNNING'}
-        />
+        <div className="flex items-center justify-center h-full">
+          <Badge
+            className={getStatusBadgeColor(status)}
+            variant="xs"
+            tooltipContent={status}
+            animated={status === 'RUNNING'}
+          />
+        </div>
       );
     },
     filterFn: (row, id, value) => {
@@ -72,7 +74,7 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
     cell: ({ row }) => {
       const startedAt = row.getValue('startedAt') as string | null;
       if (!startedAt) {
-        return <span>N/A</span>;
+        return <span>-</span>;
       }
       return (
         <TooltipProvider>
@@ -81,8 +83,8 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
               <span>
                 <Time
                   date={startedAt}
-                  variant="timestamp"
-                  className="font-mono"
+                  variant="compact"
+                  className="font-mono text-xs text-muted-foreground whitespace-nowrap"
                   asChild
                 />
               </span>
@@ -100,7 +102,7 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
   {
     accessorKey: 'displayName',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Display Name" />
+      <DataTableColumnHeader column={column} title="Run ID" />
     ),
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue('displayName')}</div>
@@ -154,7 +156,7 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
       const status = row.getValue('status') as V1TaskStatus;
 
       if (!startedAt) {
-        return <span>N/A</span>;
+        return <span>-</span>;
       }
 
       const start = new Date(startedAt);
@@ -212,7 +214,11 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row }) => (
+      <div className="flex items-center justify-end h-full">
+        <DataTableRowActions row={row} />
+      </div>
+    ),
     enableHiding: false,
   },
 ];

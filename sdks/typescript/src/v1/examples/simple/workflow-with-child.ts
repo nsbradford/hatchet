@@ -35,6 +35,11 @@ export const parent = hatchet.task({
   fn: async (input: ParentInput, ctx) => {
     // eslint-disable-next-line no-plusplus
 
+    // fail 10% of the time
+    if (Math.random() < 0.1) {
+      throw new Error('Parent task failed randomly');
+    }
+
     const children = [];
     for (let i = 0; i < Math.floor(Math.random() * 100) + 10; i++) {
       const c = await ctx.runNoWaitChild(child, {

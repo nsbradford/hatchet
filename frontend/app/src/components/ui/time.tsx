@@ -13,6 +13,8 @@ const timeVariants = cva('text-sm', {
       timestamp: 'font-mono text-xs bg-muted px-1.5 py-0.5 rounded',
       // Short form of the date-time
       short: 'text-xs',
+      // Compact timestamp for table cells
+      compact: 'font-mono text-xs',
     },
   },
   defaultVariants: {
@@ -59,6 +61,21 @@ export function Time({
   if (variant === 'short' && date) {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     const formattedTime = format(dateObj, 'MMM d, HH:mm');
+
+    return (
+      <span
+        className={cn(!asChild && timeVariants({ variant }), className)}
+        {...props}
+      >
+        {formattedTime}
+      </span>
+    );
+  }
+
+  // Add compact variant
+  if (variant === 'compact' && date) {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const formattedTime = format(dateObj, 'MM-dd HH:mm:ss.SSS');
 
     return (
       <span

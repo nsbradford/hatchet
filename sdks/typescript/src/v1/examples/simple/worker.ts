@@ -14,14 +14,18 @@ async function main() {
   const stop = worker.start();
   const runs = [];
 
-  for (let i = 0; i < 2; i++) {
-    const run = await parent.runNoWait({ Message: 'Hello, world!' });
-    runs.push(run);
+  try {
+    for (let i = 0; i < 2; i++) {
+      const run = await parent.runNoWait({ Message: 'Hello, world!' });
+      runs.push(run);
+    }
+
+    const results = await Promise.all(runs.map((r) => r.output));
+
+    console.log(results);
+  } catch (error) {
+    console.error(error);
   }
-
-  const results = await Promise.all(runs.map((r) => r.output));
-
-  console.log(results);
 
   // worker.stop();
   await stop;

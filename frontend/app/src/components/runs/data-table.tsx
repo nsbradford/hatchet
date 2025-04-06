@@ -30,6 +30,7 @@ import { DataTableViewOptions } from './data-table-view-options';
 import { DataTablePagination } from './data-table-pagination';
 import { DataTableFacetedFilter } from './data-table-faceted-filter';
 import { statusOptions } from './columns';
+import { cn } from '@/lib/utils';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -160,7 +161,14 @@ export function DataTable<TData, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className={cn({
+                      'w-[40px] bg-muted/80': header.id === 'status',
+                      'max-w-[180px] w-[180px] bg-muted/80 border-r border-border':
+                        header.id === 'startedAt',
+                    })}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -180,7 +188,14 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className={cn({
+                        'p-0 w-[40px] bg-muted/80': cell.column.id === 'status',
+                        'p-0 max-w-[180px] w-[180px] bg-muted/80 border-r border-border':
+                          cell.column.id === 'startedAt',
+                      })}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

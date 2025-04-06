@@ -21,6 +21,7 @@ const badgeVariants = cva(
         destructive:
           'border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80',
         outline: 'text-foreground',
+        xs: 'w-3 h-3 p-0 rounded-sm border-transparent',
         small: 'w-3 h-3 p-0 rounded-sm border-transparent',
       },
       animated: {
@@ -49,7 +50,7 @@ function Badge({
   ...props
 }: BadgeProps) {
   // If it's the small variant and tooltip content is provided
-  if (variant === 'small' && tooltipContent) {
+  if (variant === 'xs' && tooltipContent) {
     return (
       <TooltipProvider>
         <Tooltip>
