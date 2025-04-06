@@ -2,7 +2,12 @@ import { formatDuration, intervalToDuration } from 'date-fns';
 import { getStatusBadgeColor } from '../runs/columns';
 import { TimelineItemProps } from './types';
 
-export function TimelineItem({ item, onClick }: TimelineItemProps) {
+export function TimelineItem({
+  item,
+  onClick,
+  globalStartTime,
+  globalEndTime,
+}: TimelineItemProps) {
   const handleClick = () => {
     if (onClick) {
       onClick();
@@ -21,11 +26,23 @@ export function TimelineItem({ item, onClick }: TimelineItemProps) {
       end: itemEndTime,
     });
 
-    const timeRange = itemEndTime - itemStartTime;
-    const leftPos = ((itemStartTime - 0) / timeRange) * 100;
-    const itemWidth = 300;
+    // Ensure we have valid global times
+    const effectiveGlobalStart = globalStartTime ?? itemStartTime;
+    const effectiveGlobalEnd = globalEndTime ?? itemEndTime;
 
+    // Calculate the total time range (ensure it's at least 1ms to prevent division by zero)
+    const timeRange = Math.max(effectiveGlobalEnd - effectiveGlobalStart, 1);
+
+    // Calculate left position as percentage of the timeline
+    const leftPos = ((itemStartTime - effectiveGlobalStart) / timeRange) * 100;
+
+    // Calculate width as percentage of the timeline
+    const widthPercent = ((itemEndTime - itemStartTime) / timeRange) * 100;
+    const itemWidth = Math.max(0.5, widthPercent); // ensure minimum width
+
+    // Ensure the item stays within the bounds of the timeline (0-100%)
     const adjustedLeftPos = Math.min(100 - itemWidth, Math.max(0, leftPos));
+
     const tooltipText = `${item.displayName}: ${formatDuration(duration, {
       format: ['days', 'hours', 'minutes', 'seconds'],
       delimiter: ', ',
@@ -47,17 +64,12 @@ export function TimelineItem({ item, onClick }: TimelineItemProps) {
         <div
           className={`absolute inset-0 ${statusColorClass} opacity-50`}
         ></div>
-        <div className="z-10 px-1 text-xs font-medium truncate text-gray-900 dark:text-white">
-          {item.displayName}
+        <div className="z-10 px-1 text-xs font-medium truncate text-center w-full text-gray-900 dark:text-white">
+          {formatDuration(duration, {
+            format: ['minutes', 'seconds'],
+            delimiter: ':',
+          })}
         </div>
-        {itemWidth > 20 && (
-          <div className="z-10 text-xs absolute bottom-0 right-1 text-gray-900 dark:text-white opacity-80">
-            {formatDuration(duration, {
-              format: ['days', 'hours', 'minutes', 'seconds'],
-              delimiter: ', ',
-            })}
-          </div>
-        )}
       </div>
     );
   }
@@ -65,10 +77,20 @@ export function TimelineItem({ item, onClick }: TimelineItemProps) {
   // Handle events with createdAt
   if (item.createdAt) {
     const itemTime = new Date(item.createdAt).getTime();
-    const timeRange = Date.now() - itemTime;
-    const leftPos = ((itemTime - 0) / timeRange) * 100;
 
+    // Ensure we have valid global times
+    const effectiveGlobalStart = globalStartTime ?? itemTime;
+    const effectiveGlobalEnd = globalEndTime ?? Date.now();
+
+    // Calculate the total time range (ensure it's at least 1ms to prevent division by zero)
+    const timeRange = Math.max(effectiveGlobalEnd - effectiveGlobalStart, 1);
+
+    // Calculate position as percentage of the timeline
+    const leftPos = ((itemTime - effectiveGlobalStart) / timeRange) * 100;
+
+    // Ensure the item stays within the bounds of the timeline (0-100%)
     const adjustedLeftPos = Math.min(99, Math.max(1, leftPos));
+
     const tooltipText = `${item.displayName}: ${item.createdAt}`;
 
     return (
@@ -80,11 +102,6 @@ export function TimelineItem({ item, onClick }: TimelineItemProps) {
       >
         <div className="w-0.5 h-full bg-secondary/50"></div>
         <div className="w-3 h-3 rounded-full bg-secondary absolute top-0"></div>
-        {item.metadata?.id && (
-          <div className="absolute -top-6 text-xs whitespace-nowrap transform -translate-x-1/2 text-muted-foreground">
-            {item.metadata.id}
-          </div>
-        )}
       </div>
     );
   }

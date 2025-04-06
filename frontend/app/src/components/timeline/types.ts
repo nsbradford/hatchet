@@ -5,9 +5,12 @@ export interface TimelineProps {
   showLabels?: boolean;
   minWidth?: number;
   height?: number;
+  showTimeLabels?: boolean;
 }
 
 export interface TimelineItemProps {
   item: V1WorkflowRun;
   onClick?: () => void;
+  globalStartTime?: number;
+  globalEndTime?: number;
 }

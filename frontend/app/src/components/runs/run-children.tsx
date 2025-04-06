@@ -5,9 +5,11 @@ import { Link } from 'react-router-dom';
 import { PropsWithChildren, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Timeline } from '../timeline';
+import { TimelineProvider } from '@/hooks/use-timeline-context';
 
 const MAX_CHILDREN = 10;
 const MAX_DEPTH = 10;
+const ROW_HEIGHT = 36; // Fixed height for each row
 
 interface RunRowProps {
   run: V1WorkflowRunDetails['run'];
@@ -50,16 +52,14 @@ function RunRow({ run }: RunRowProps) {
   }, [run]);
 
   return (
-    <div className={`flex flex-row gap-2 w-full items-center`}>
-      <div className="text-sm text-muted-foreground truncate max-w-[50%] overflow-hidden whitespace-nowrap">
+    <div
+      className="grid grid-cols-[1fr,200px] items-center"
+      style={{ height: ROW_HEIGHT }}
+    >
+      <div className="text-sm text-muted-foreground truncate overflow-hidden whitespace-nowrap">
         <Link to={`/runs/${run.metadata.id}`}>{run.displayName}</Link>
       </div>
-      <Timeline
-        items={timelineItems}
-        showLabels={false}
-        minWidth={200}
-        height={28}
-      />
+      <Timeline items={timelineItems} showLabels={false} height={28} />
     </div>
   );
 }
@@ -131,23 +131,34 @@ export function RunChildrenCardRoot({ runId }: RunChildrenCardProps) {
   }
 
   return (
-    <RunsProvider
-      initialFilters={{
-        sortBy: WorkflowRunOrderByField.StartedAt,
-        sortDirection: 'desc',
-        parentTaskExternalId: runId,
-        isRootTask: false,
-      }}
-      initialPagination={{
-        currentPage: 1,
-        pageSize: 100,
-      }}
-      refetchInterval={5000}
-    >
-      <HighlightGroup>
-        <RunRow run={run} depth={0} />
-        <ChildrenList run={run} depth={0} />
-      </HighlightGroup>
-    </RunsProvider>
+    <TimelineProvider>
+      <RunsProvider
+        initialFilters={{
+          sortBy: WorkflowRunOrderByField.StartedAt,
+          sortDirection: 'desc',
+          parentTaskExternalId: runId,
+          isRootTask: false,
+        }}
+        initialPagination={{
+          currentPage: 1,
+          pageSize: 100,
+        }}
+        refetchInterval={5000}
+      >
+        <div
+          className="grid grid-cols-[1fr,200px] items-center"
+          style={{ height: ROW_HEIGHT }}
+        >
+          <div className="text-sm text-muted-foreground truncate overflow-hidden whitespace-nowrap">
+            <Link to={`/runs/${run.metadata.id}`}>{run.displayName}</Link>
+          </div>
+          <Timeline items={[]} showLabels={true} height={28} />
+        </div>
+        <HighlightGroup>
+          <RunRow run={run} depth={0} />
+          <ChildrenList run={run} depth={0} />
+        </HighlightGroup>
+      </RunsProvider>
+    </TimelineProvider>
   );
 }
