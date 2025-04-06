@@ -41,7 +41,7 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { PropsWithChildren, useMemo } from 'react';
+import { PropsWithChildren, useMemo, useEffect, useState } from 'react';
 import useUser from '@/hooks/use-user';
 import { getMainNavLinks } from './main-nav';
 import { TenantBlock } from './user-dropdown';
@@ -67,6 +67,33 @@ export function AppSidebar({ children }: PropsWithChildren) {
   const navLinks = getMainNavLinks(location.pathname);
   const { toggleSidebar } = useSidebar();
   const docs = useDocs();
+  const [collapsibleState, setCollapsibleState] = useState<
+    Record<string, boolean>
+  >({});
+
+  // Load collapsible state from localStorage on initial render
+  useEffect(() => {
+    const savedState = localStorage.getItem('sidebar_collapsible_state');
+    if (savedState) {
+      try {
+        setCollapsibleState(JSON.parse(savedState));
+      } catch (error) {
+        console.error('Failed to parse sidebar collapsible state', error);
+      }
+    }
+  }, []);
+
+  // Save collapsible state to localStorage
+  const updateCollapsibleState = (key: string, isOpen: boolean) => {
+    setCollapsibleState((prev) => {
+      const newState = { ...prev, [key]: isOpen };
+      localStorage.setItem(
+        'sidebar_collapsible_state',
+        JSON.stringify(newState),
+      );
+      return newState;
+    });
+  };
 
   const supportReference = useMemo(() => {
     return `ver: ${meta?.version}
@@ -138,7 +165,10 @@ name: ${user?.name}`;
                   <Collapsible
                     key={item.title}
                     asChild
-                    defaultOpen={item.isActive}
+                    defaultOpen={collapsibleState[item.title] ?? item.isActive}
+                    onOpenChange={(isOpen) =>
+                      updateCollapsibleState(item.title, isOpen)
+                    }
                   >
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>

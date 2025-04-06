@@ -38,9 +38,28 @@ export default function useTenant(): TenantState {
       newSearchParams.set('tenant', tenantId);
       setSearchParams(newSearchParams, { replace: true });
 
+      // Get the previous tenant ID that might be in existing query keys
+      const prevTenantId =
+        searchParams.get('tenant') || localStorage.getItem('tenant');
+
+      // Invalidate all queries that use the tenant ID in their query key
+      // Most queries include tenant ID as the second item in their queryKey array
+      // like ['entity:operation', tenantId, ...]
+      if (prevTenantId) {
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            if (Array.isArray(query.queryKey)) {
+              // Check if the query key array contains the tenant ID at any position
+              return query.queryKey.includes(prevTenantId);
+            }
+            return false;
+          },
+        });
+      }
+
       console.log('setTenant', tenantId);
     },
-    [searchParams, setSearchParams],
+    [searchParams, setSearchParams, queryClient],
   );
 
   const membership = useMemo(() => {

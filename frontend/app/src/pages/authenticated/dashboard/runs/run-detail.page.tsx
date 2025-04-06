@@ -10,9 +10,12 @@ import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { RunChildrenCardRoot } from '@/components/runs/run-children';
 import { RunOutputCard } from '@/components/runs/run-output-card';
+import useTenant from '@/hooks/use-tenant';
+import { WrongTenant } from '@/components/errors/unauthorized';
 
 export default function RunDetailPage() {
   const { runId } = useParams<{ runId: string }>();
+  const { tenant } = useTenant();
   const { data, isLoading, error } = useRunDetail(runId || '');
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -81,6 +84,15 @@ export default function RunDetailPage() {
   }
 
   const isRunning = run.status === 'RUNNING';
+
+  // wrong tenant selected error
+  if (tenant?.metadata.id !== run.tenantId) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        {run?.tenantId && <WrongTenant desiredTenantId={run.tenantId} />}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
