@@ -11,9 +11,7 @@ import {
   Play,
   Scale,
   Settings,
-  User,
   Users,
-  Users2,
   UsersIcon,
 } from 'lucide-react';
 import { FaDiscord, FaPlay } from 'react-icons/fa';
