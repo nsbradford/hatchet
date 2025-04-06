@@ -29,10 +29,7 @@ function RunRow({
   isTitle,
 }: Partial<RunRowProps> & { isTitle?: boolean }) {
   return (
-    <div
-      className="grid grid-cols-[1fr,600px] items-center"
-      style={{ height: ROW_HEIGHT }}
-    >
+    <div className="grid grid-cols-[1fr,600px] items-center">
       <div className="text-sm text-muted-foreground truncate overflow-hidden whitespace-nowrap">
         {run && <Link to={`/runs/${run.metadata.id}`}>{run.displayName}</Link>}
       </div>
@@ -81,7 +78,7 @@ function ChildrenList({ run, depth }: RunRowProps) {
                 sortBy: WorkflowRunOrderByField.StartedAt,
                 sortDirection: 'desc',
                 parentTaskExternalId: childRun.metadata.id,
-                isRootTask: true,
+                isRootTask: false,
               }}
               initialPagination={{
                 currentPage: 1,

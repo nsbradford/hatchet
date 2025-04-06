@@ -22,7 +22,7 @@ export const leaf = hatchet.task({
 
     // sleep for a random amount of time between 1 and 10 seconds
     const sleepTime = 1000 * (Math.random() * 5 + 1);
-    console.log(`Sleeping for ${sleepTime}ms`);
+    console.log(`leaf sleeping for ${sleepTime}ms`);
     await sleep(sleepTime);
     return {
       TransformedMessage: input.Message.toLowerCase(),
@@ -39,19 +39,15 @@ export const child = hatchet.task({
     //   throw new Error('Failed to complete task');
     // }
 
-    const children = [];
-    for (let i = 0; i < Math.floor(Math.random() * 3) + 2; i++) {
-      const c = await ctx.runNoWaitChild(leaf, {
-        Message: input.Message,
-      });
-      children.push(c);
-    }
+    console.log('Running child LEAF');
 
-    const results = await Promise.all(children.map((c) => c.output));
+    await ctx.runChild(leaf, {
+      Message: input.Message,
+    });
 
     // sleep for a random amount of time between 1 and 10 seconds
     const sleepTime = 1000 * (Math.random() * 5 + 1);
-    console.log(`Sleeping for ${sleepTime}ms`);
+    console.log(`child sleeping for ${sleepTime}ms`);
     await sleep(sleepTime);
     return {
       TransformedMessage: input.Message.toLowerCase(),
@@ -69,15 +65,26 @@ export const parent = hatchet.task({
     //   throw new Error('Parent task failed randomly');
     // }
 
-    const children = [];
-    for (let i = 0; i < 10; i++) {
-      const c = await ctx.runNoWaitChild(child, {
-        Message: input.Message,
-      });
-      children.push(c);
-    }
-
-    const results = await Promise.all(children.map((c) => c.output));
+    await ctx.bulkRunChildren([
+      {
+        workflow: child,
+        input: {
+          Message: input.Message,
+        },
+      },
+      {
+        workflow: child,
+        input: {
+          Message: input.Message,
+        },
+      },
+      {
+        workflow: child,
+        input: {
+          Message: input.Message,
+        },
+      },
+    ]);
 
     // const jitter = Math.floor(Math.random() * 1000) + 30000;
 
@@ -86,7 +93,7 @@ export const parent = hatchet.task({
     // });
 
     return {
-      TransformedMessage: results.map((r) => r.TransformedMessage).join(', '),
+      TransformedMessage: input.Message.toLowerCase(),
     };
   },
 });

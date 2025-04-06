@@ -45,6 +45,9 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
       if (latest === undefined || latestTime > latest) {
         setLatest(latestTime);
       }
+      if (item.startedAt && !item.finishedAt) {
+        setLatest(Date.now());
+      }
     },
     [earliest, latest, setEarliest, setLatest],
   );

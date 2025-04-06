@@ -8,7 +8,7 @@ async function main() {
     // 👀 Declare the workflows that the worker can execute
     workflows: [simple, parent, child, leaf],
     // 👀 Declare the number of concurrent task runs the worker can accept
-    slots: 3,
+    slots: 300,
   });
 
   const stop = worker.start();
