@@ -1,6 +1,10 @@
 import { useRunDetail } from '@/hooks/use-run-detail';
 import useRuns, { RunsProvider } from '@/hooks/use-runs';
-import { V1WorkflowRunDetails, WorkflowRunOrderByField } from '@/lib/api';
+import {
+  V1WorkflowRun,
+  V1WorkflowRunDetails,
+  WorkflowRunOrderByField,
+} from '@/lib/api';
 import { Link } from 'react-router-dom';
 import { PropsWithChildren, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -24,14 +28,25 @@ function HighlightGroup({ children }: PropsWithChildren) {
   );
 }
 
-function RunRow({ run }: RunRowProps) {
+function RunRow({
+  run,
+  isTitle,
+}: Partial<RunRowProps> & { isTitle?: boolean }) {
   // Use run directly as timeline item
   const timelineItems = useMemo(() => {
-    const items = [];
+    const items: V1WorkflowRun[] = [];
+
+    if (!run) {
+      return items;
+    }
 
     // Add the run itself if it has started
     if (run.startedAt) {
-      items.push(run);
+      items.push({
+        ...run,
+        // Ensure we have both startedAt and finishedAt for proper rendering
+        finishedAt: run.finishedAt || undefined, // Use undefined instead of null if not finished
+      });
     }
 
     // Add a separate object for the created event if needed
@@ -43,8 +58,8 @@ function RunRow({ run }: RunRowProps) {
       items.push({
         ...run,
         // Force this item to be treated as a creation event
-        // by removing startedAt temporarily if it exists
         startedAt: undefined,
+        finishedAt: undefined,
       });
     }
 
@@ -53,13 +68,18 @@ function RunRow({ run }: RunRowProps) {
 
   return (
     <div
-      className="grid grid-cols-[1fr,200px] items-center"
+      className="grid grid-cols-[1fr,600px] items-center"
       style={{ height: ROW_HEIGHT }}
     >
       <div className="text-sm text-muted-foreground truncate overflow-hidden whitespace-nowrap">
-        <Link to={`/runs/${run.metadata.id}`}>{run.displayName}</Link>
+        {run && <Link to={`/runs/${run.metadata.id}`}>{run.displayName}</Link>}
       </div>
-      <Timeline items={timelineItems} showLabels={false} height={28} />
+      <Timeline
+        items={timelineItems}
+        showLabels={false}
+        height={28}
+        showTimeLabels={isTitle}
+      />
     </div>
   );
 }
@@ -145,15 +165,9 @@ export function RunChildrenCardRoot({ runId }: RunChildrenCardProps) {
         }}
         refetchInterval={5000}
       >
-        <div
-          className="grid grid-cols-[1fr,200px] items-center"
-          style={{ height: ROW_HEIGHT }}
-        >
-          <div className="text-sm text-muted-foreground truncate overflow-hidden whitespace-nowrap">
-            <Link to={`/runs/${run.metadata.id}`}>{run.displayName}</Link>
-          </div>
-          <Timeline items={[]} showLabels={true} height={28} />
-        </div>
+        <HighlightGroup>
+          <RunRow isTitle depth={0} />
+        </HighlightGroup>
         <HighlightGroup>
           <RunRow run={run} depth={0} />
           <ChildrenList run={run} depth={0} />

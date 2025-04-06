@@ -33,15 +33,19 @@ export function TimelineItem({
     // Calculate the total time range (ensure it's at least 1ms to prevent division by zero)
     const timeRange = Math.max(effectiveGlobalEnd - effectiveGlobalStart, 1);
 
-    // Calculate left position as percentage of the timeline
+    // Calculate left position as percentage of the timeline - always render from left
     const leftPos = ((itemStartTime - effectiveGlobalStart) / timeRange) * 100;
+
+    // Ensure leftPos is within bounds (0-100%)
+    const adjustedLeftPos = Math.max(0, Math.min(100, leftPos));
 
     // Calculate width as percentage of the timeline
     const widthPercent = ((itemEndTime - itemStartTime) / timeRange) * 100;
-    const itemWidth = Math.max(0.5, widthPercent); // ensure minimum width
-
-    // Ensure the item stays within the bounds of the timeline (0-100%)
-    const adjustedLeftPos = Math.min(100 - itemWidth, Math.max(0, leftPos));
+    // Ensure item has reasonable width and doesn't exceed right boundary
+    const itemWidth = Math.min(
+      100 - adjustedLeftPos,
+      Math.max(0.5, widthPercent),
+    );
 
     const tooltipText = `${item.displayName}: ${formatDuration(duration, {
       format: ['days', 'hours', 'minutes', 'seconds'],
@@ -52,7 +56,7 @@ export function TimelineItem({
 
     return (
       <div
-        className="absolute h-6 rounded cursor-pointer hover:brightness-110 transition-all flex items-center justify-center overflow-hidden border"
+        className="absolute h-6 rounded cursor-pointer hover:brightness-110 transition-all flex items-center justify-center border h-full"
         style={{
           left: `${adjustedLeftPos}%`,
           width: `${itemWidth}%`,
@@ -64,11 +68,19 @@ export function TimelineItem({
         <div
           className={`absolute inset-0 ${statusColorClass} opacity-50`}
         ></div>
-        <div className="z-10 px-1 text-xs font-medium truncate text-center w-full text-gray-900 dark:text-white">
-          {formatDuration(duration, {
-            format: ['minutes', 'seconds'],
-            delimiter: ':',
-          })}
+        <div className="z-10 px-1 text-[10px] font-mono font-light text-muted-foreground/60 whitespace-nowrap w-full flex justify-between">
+          <span className="text-xs text-muted-foreground/60">
+            {item.displayName}
+          </span>
+          <span className="text-xs text-muted-foreground/60">
+            {formatDuration(duration, {
+              format: ['hours', 'minutes', 'seconds'],
+            })
+              .replace(/days?/, 'd')
+              .replace(/hours?/, 'h')
+              .replace(/minutes?/, 'm')
+              .replace(/seconds?/, 's')}
+          </span>
         </div>
       </div>
     );
@@ -80,28 +92,30 @@ export function TimelineItem({
 
     // Ensure we have valid global times
     const effectiveGlobalStart = globalStartTime ?? itemTime;
-    const effectiveGlobalEnd = globalEndTime ?? Date.now();
+    const effectiveGlobalEnd = globalEndTime ?? itemTime + 1; // Add 1ms to prevent division by zero
 
-    // Calculate the total time range (ensure it's at least 1ms to prevent division by zero)
+    // Calculate the total time range (ensure it's at least 1ms)
     const timeRange = Math.max(effectiveGlobalEnd - effectiveGlobalStart, 1);
 
-    // Calculate position as percentage of the timeline
+    // Calculate position as percentage of the timeline - always render from left
     const leftPos = ((itemTime - effectiveGlobalStart) / timeRange) * 100;
 
-    // Ensure the item stays within the bounds of the timeline (0-100%)
-    const adjustedLeftPos = Math.min(99, Math.max(1, leftPos));
+    // Ensure position is within bounds (0-100%)
+    const adjustedLeftPos = Math.max(0, Math.min(100, leftPos));
 
     const tooltipText = `${item.displayName}: ${item.createdAt}`;
 
     return (
       <div
-        className="absolute h-full flex flex-col items-center cursor-pointer"
+        className="absolute h-full flex flex-col items-center cursor-pointer ml-[-10px]"
         style={{ left: `${adjustedLeftPos}%` }}
         onClick={handleClick}
         title={tooltipText}
       >
-        <div className="w-0.5 h-full bg-secondary/50"></div>
-        <div className="w-3 h-3 rounded-full bg-secondary absolute top-0"></div>
+        <div className="flex flex-row items-center h-full">
+          <div className="w-[10px] h-[10px] rounded-full bg-secondary"></div>
+        </div>
+        <div className="w-full bg-secondary/50"></div>
       </div>
     );
   }
