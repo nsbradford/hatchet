@@ -15,12 +15,12 @@ export function Timeline({ items, showTimeLabels = false }: TimelineProps) {
     }
   }, [updateTimeRange, items, resetTimeRange]);
 
-  if (!earliest || !latest) {
-    return null;
-  }
+  // If no time range is set yet, use defaults to at least show something
+  const effectiveEarliest = earliest || Date.now() - 1000; // Default to 1 second ago
+  const effectiveLatest = latest || Date.now(); // Default to now
 
   // Ensure we have a valid time range to prevent division by zero
-  const timeRangeMs = Math.max(latest - earliest, 1);
+  const timeRangeMs = Math.max(effectiveLatest - effectiveEarliest, 1);
 
   return (
     <div className="relative border border-border border-dashed border-r-0 h-full w-full">
@@ -33,7 +33,9 @@ export function Timeline({ items, showTimeLabels = false }: TimelineProps) {
           >
             <div className="text-[10px] font-mono text-muted-foreground whitespace-nowrap pl-1">
               {showTimeLabels &&
-                new Date(earliest + (i * timeRangeMs) / 5).toLocaleTimeString()}
+                new Date(
+                  effectiveEarliest + (i * timeRangeMs) / 5,
+                ).toLocaleTimeString()}
             </div>
           </div>
         ))}
@@ -44,8 +46,8 @@ export function Timeline({ items, showTimeLabels = false }: TimelineProps) {
           key={item.metadata?.id || index}
           item={item}
           onClick={undefined}
-          globalStartTime={earliest}
-          globalEndTime={latest}
+          globalStartTime={effectiveEarliest}
+          globalEndTime={effectiveLatest}
         />
       ))}
     </div>

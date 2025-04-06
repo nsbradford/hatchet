@@ -44,7 +44,7 @@ function RunRow({
 }
 
 function ChildrenList({ run, depth }: RunRowProps) {
-  const { data, isLoading } = useRuns();
+  const { data, isLoading } = useRuns(1000);
 
   const [maxChildren, setMaxChildren] = useState(MAX_CHILDREN);
 
@@ -107,7 +107,7 @@ interface RunChildrenCardProps {
 }
 
 export function RunChildrenCardRoot({ runId }: RunChildrenCardProps) {
-  const { data, isLoading } = useRunDetail(runId);
+  const { data, isLoading } = useRunDetail(runId, 1000);
 
   const run = data?.run;
 

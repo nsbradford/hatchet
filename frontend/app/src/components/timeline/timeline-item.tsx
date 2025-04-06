@@ -1,9 +1,31 @@
-import { Duration, intervalToDuration } from 'date-fns';
+import { intervalToDuration, Duration } from 'date-fns';
 import { getStatusBadgeColor } from '../runs/columns';
 import { TimelineItemProps } from './types';
 import { V1TaskStatus } from '@/lib/api';
 import useTimeline from '@/hooks/use-timeline-context';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+// Helper to check if a timestamp is valid (not empty or the special "0001-01-01" value)
+const isValidTimestamp = (timestamp?: string): boolean => {
+  if (!timestamp) {
+    return false;
+  }
+
+  // Check for the special "0001-01-01" timestamp that represents a null value
+  if (timestamp.startsWith('0001-01-01')) {
+    return false;
+  }
+
+  const date = new Date(timestamp);
+  // Check if the date is valid and not too far in the past
+  return !isNaN(date.getTime()) && date.getFullYear() > 1970;
+};
 
 export function TimelineItem({ item, onClick }: TimelineItemProps) {
   const { earliest, timeRange } = useTimeline();
@@ -14,91 +36,162 @@ export function TimelineItem({ item, onClick }: TimelineItemProps) {
     }
   };
 
-  if (!item.createdAt) {
+  // Check if item has a valid createdAt timestamp
+  if (!isValidTimestamp(item.createdAt)) {
     return undefined;
   }
 
-  // Handle run with startedAt
-  if (item.startedAt) {
-    const itemCreatedAt = new Date(item.createdAt).getTime();
-    const itemStartTime = new Date(item.startedAt).getTime();
-    const itemEndTime = item.finishedAt
-      ? new Date(item.finishedAt).getTime()
-      : Date.now();
+  // At this point we know createdAt is valid and not undefined
+  const itemCreatedAt = new Date(item.createdAt!).getTime();
+  const createdAtDate = new Date(item.createdAt!);
 
-    // Calculate the total time range (ensure it's at least 1ms to prevent division by zero)
-    const duration = Math.max(itemEndTime - itemStartTime, 1);
-
-    const widthPercent = (duration / timeRange) * 100;
-
-    const createdOffset = item.createdAt
-      ? Math.round(((itemCreatedAt - earliest) / timeRange) * 100)
-      : 0;
-
-    const startedOffset = item.startedAt
-      ? Math.round(((itemStartTime - earliest) / timeRange) * 100)
-      : 0;
-
-    const timeInQueue = Math.max(itemStartTime - itemCreatedAt, 1);
-
-    const timeToStartWidth = item.startedAt
-      ? Math.round((timeInQueue / timeRange) * 100)
-      : 0;
+  // Handle items with only createdAt (pending items)
+  if (!isValidTimestamp(item.startedAt)) {
+    // For pending items, show a dot at the creation time
+    const createdOffset = Math.round(
+      ((itemCreatedAt - earliest) / timeRange) * 100,
+    );
 
     return (
-      <>
-        <div
-          className="absolute h-full rounded cursor-pointer hover:brightness-110 z-10 flex items-center"
-          style={{
-            width: `${timeToStartWidth}%`,
-            left: `${createdOffset}%`,
-          }}
-        >
-          <EventDot />
-        </div>
-        <div
-          className="absolute h-full rounded cursor-pointer hover:brightness-110"
-          style={{
-            left: `${startedOffset}%`,
-            width: `${widthPercent}%`,
-          }}
-          onClick={handleClick}
-        >
-          <RunBar
-            displayName={item.displayName}
-            duration={intervalToDuration({
-              start: itemStartTime,
-              end: itemEndTime,
-            })}
-            status={item.status}
-          />
-        </div>
-      </>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className="absolute h-full rounded cursor-pointer hover:brightness-110 z-10 flex items-center"
+              style={{
+                left: `${createdOffset}%`,
+              }}
+              onClick={handleClick}
+            >
+              <div className="flex flex-row items-center h-full">
+                <div className="w-[10px] h-[10px] rounded-full bg-white/50"></div>
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span>Created: {createdAtDate.toLocaleString()}</span>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
-  return null;
+  // At this point we know startedAt is valid and not undefined
+  const itemStartTime = new Date(item.startedAt!).getTime();
+  const itemEndTime = isValidTimestamp(item.finishedAt)
+    ? new Date(item.finishedAt!).getTime()
+    : Date.now();
+
+  // Calculate the total time range (ensure it's at least 1ms to prevent division by zero)
+  const duration = Math.max(itemEndTime - itemStartTime, 1);
+
+  const widthPercent = (duration / timeRange) * 100;
+
+  const createdOffset = Math.round(
+    ((itemCreatedAt - earliest) / timeRange) * 100,
+  );
+
+  const startedOffset = Math.round(
+    ((itemStartTime - earliest) / timeRange) * 100,
+  );
+
+  const timeInQueue = Math.max(itemStartTime - itemCreatedAt, 1);
+
+  const timeToStartWidth = Math.round((timeInQueue / timeRange) * 100);
+
+  // Format the time in queue
+  const queueDuration = intervalToDuration({
+    start: itemCreatedAt,
+    end: itemStartTime,
+  });
+
+  const rawQueueTimeMs = itemStartTime - itemCreatedAt;
+
+  return (
+    <>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className="absolute h-full rounded cursor-pointer hover:brightness-110 z-10 flex items-center"
+              style={{
+                width: `${timeToStartWidth}%`,
+                left: `${createdOffset}%`,
+              }}
+            >
+              <EventDot />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span>
+              Time in queue: {formatDuration(queueDuration, rawQueueTimeMs)}
+            </span>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <div
+        className="absolute h-full rounded cursor-pointer hover:brightness-110"
+        style={{
+          left: `${startedOffset}%`,
+          width: `${widthPercent}%`,
+        }}
+        onClick={handleClick}
+      >
+        <RunBar status={item.status} />
+      </div>
+    </>
+  );
 }
 
-function RunBar({
-  displayName,
-  duration,
-  status,
-}: {
-  displayName: string;
-  duration: Duration;
-  status: V1TaskStatus;
-}) {
+function formatDuration(duration: Duration, rawTimeMs: number): string {
+  const parts = [];
+
+  if (duration.hours) {
+    parts.push(`${duration.hours}h`);
+  }
+
+  if (duration.minutes) {
+    parts.push(`${duration.minutes}m`);
+  }
+
+  if (duration.seconds || (!duration.hours && !duration.minutes)) {
+    parts.push(`${duration.seconds || 0}s`);
+  }
+
+  // Calculate milliseconds as the remainder after accounting for hours, minutes, and seconds
+  const ms = rawTimeMs % 1000;
+  parts.push(`${ms}ms`);
+
+  return parts.join(' ');
+}
+
+function RunBar({ status }: { status: V1TaskStatus }) {
   const statusColorClass = getStatusBadgeColor(status);
 
   return (
     <div className="flex flex-row items-center h-full rounded-md overflow-hidden">
-      <div
-        className={cn(
-          'z-10 px-1 text-[10px] font-mono font-light text-muted-foreground/60 whitespace-nowrap w-full flex justify-between h-full items-center',
-          statusColorClass,
-        )}
-      ></div>
+      {status === 'RUNNING' ? (
+        <div
+          className={cn(
+            'z-10 px-1 text-[10px] font-mono font-light text-muted-foreground/60 whitespace-nowrap w-full flex justify-between h-full items-center relative',
+            statusColorClass,
+          )}
+        >
+          {/* Inner glow pulsing effect */}
+          <div className="absolute inset-0 bg-blue-500/30 animate-pulse rounded-md"></div>
+          {/* Subtle moving dots effect */}
+          <div className="absolute inset-y-0 left-0 w-full h-full overflow-hidden">
+            <div className="absolute h-full w-1/5 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-move"></div>
+          </div>
+        </div>
+      ) : (
+        <div
+          className={cn(
+            'z-10 px-1 text-[10px] font-mono font-light text-muted-foreground/60 whitespace-nowrap w-full flex justify-between h-full items-center',
+            statusColorClass,
+          )}
+        ></div>
+      )}
     </div>
   );
 }

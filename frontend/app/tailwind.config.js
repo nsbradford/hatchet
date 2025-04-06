@@ -124,6 +124,14 @@ module.exports = {
           '25%': { transform: 'rotate(5deg)' },
           '75%': { transform: 'rotate(-5deg)' },
         },
+        "shimmer": {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
+        "move": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(500%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -131,7 +139,8 @@ module.exports = {
         "flip": "flip 6s infinite steps(2, end)",
         "rotate": "rotate 3s linear infinite both",
         "jiggle": 'jiggle 0.5s ease-in-out',
-
+        "shimmer": 'shimmer 2s infinite linear',
+        "move": 'move 2s infinite linear',
       },
     },
   },

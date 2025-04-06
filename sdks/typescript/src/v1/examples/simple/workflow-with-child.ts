@@ -41,9 +41,21 @@ export const child = hatchet.task({
 
     console.log('Running child LEAF');
 
-    await ctx.runChild(leaf, {
-      Message: input.Message,
-    });
+    // Randomly decide to spawn 2-3 leaf tasks
+    const numLeafTasks = Math.floor(Math.random() * 2) + 2; // Random number between 2-3
+    console.log(`Spawning ${numLeafTasks} leaf tasks`);
+
+    const leafTasks = [];
+    for (let i = 0; i < numLeafTasks; i += 1) {
+      leafTasks.push({
+        workflow: leaf,
+        input: {
+          Message: `${input.Message} - Leaf ${i + 1}`,
+        },
+      });
+    }
+
+    await ctx.bulkRunChildren(leafTasks);
 
     // sleep for a random amount of time between 1 and 10 seconds
     const sleepTime = 1000 * (Math.random() * 5 + 1);
@@ -65,27 +77,25 @@ export const parent = hatchet.task({
     //   throw new Error('Parent task failed randomly');
     // }
 
-    await ctx.bulkRunChildren([
-      {
-        workflow: child,
-        input: {
-          Message: input.Message,
-        },
-      },
-      {
-        workflow: child,
-        input: {
-          Message: input.Message,
-        },
-      },
-      {
-        workflow: child,
-        input: {
-          Message: input.Message,
-        },
-      },
-    ]);
+    // // Randomly decide to spawn 2-3 child tasks
+    // const numChildTasks = Math.floor(Math.random() * 2) + 2; // Random number between 2-3
+    // console.log(`Spawning ${numChildTasks} child tasks`);
 
+    // const childTasks = [];
+    // for (let i = 0; i < numChildTasks; i += 1) {
+    //   childTasks.push({
+    //     workflow: child,
+    //     input: {
+    //       Message: `${input.Message} - Child ${i + 1}`,
+    //     },
+    //   });
+    // }
+
+    // await ctx.bulkRunChildren(childTasks);
+
+    await sleep(100000);
+
+    // await ctx.bulkRunChildren(childTasks);
     // const jitter = Math.floor(Math.random() * 1000) + 30000;
 
     // await parent.schedule(new Date(Date.now() + jitter), {

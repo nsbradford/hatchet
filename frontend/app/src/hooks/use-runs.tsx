@@ -76,7 +76,7 @@ export function RunsProvider({
   children,
   initialFilters = {},
   initialPagination = { currentPage: 1, pageSize: 10 },
-  refetchInterval,
+  refetchInterval = 1000,
 }: RunsProviderProps) {
   const { tenant } = useTenant();
 
@@ -168,100 +168,4 @@ export default function useRuns(): RunsState {
     throw new Error('useRuns must be used within a RunsProvider');
   }
   return context;
-}
-
-// Legacy function for backward compatibility
-export function useRunsWithOptions({
-  refetchInterval,
-  initialFilters = {},
-  initialPagination = { currentPage: 1, pageSize: 10 },
-}: {
-  refetchInterval?: number;
-  initialFilters?: RunsFilters;
-  initialPagination?: RunsPagination;
-} = {}): RunsState {
-  console.warn(
-    'useRunsWithOptions is deprecated. Please use RunsProvider and useRuns instead.',
-  );
-
-  const { tenant } = useTenant();
-
-  // State for filters and pagination
-  const [filters, setFilters] = useState<RunsFilters>(initialFilters);
-  const [paginationState, setPagination] =
-    useState<RunsPagination>(initialPagination);
-
-  const listRunsQuery = useQuery({
-    queryKey: [
-      'v1:workflow-run:list',
-      tenant,
-      filters.search,
-      filters.status,
-      filters.workflowId,
-      filters.parentTaskExternalId,
-      filters.workerId,
-      filters.sortBy,
-      filters.sortDirection,
-      filters.createdAfter,
-      filters.finishedBefore,
-      filters.additionalMetadata,
-      paginationState.currentPage,
-      paginationState.pageSize,
-    ],
-    queryFn: async () => {
-      if (!tenant) {
-        return { rows: [], pagination: { current_page: 0, num_pages: 0 } };
-      }
-
-      // Convert pagination and filters to API query format
-      const query: RunQuery = {
-        offset: (paginationState.currentPage - 1) * paginationState.pageSize,
-        limit: paginationState.pageSize,
-        since:
-          filters.createdAfter ||
-          new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-        until: filters.finishedBefore,
-        workflow_ids: filters.workflowId ? [filters.workflowId] : undefined,
-        parent_task_external_id: filters.parentTaskExternalId,
-        worker_id: filters.workerId,
-        only_tasks: !!filters.workerId,
-        additional_metadata: filters.additionalMetadata,
-        statuses: filters.status ? [filters.status] : undefined,
-        is_root_task: !!filters.isRootTask,
-      };
-
-      return (await api.v1WorkflowRunList(tenant.metadata.id, query)).data;
-    },
-    refetchInterval,
-  });
-
-  // Create workflow run implementation
-  const createRunMutation = useMutation({
-    mutationKey: ['v1:workflow-run:create', tenant],
-    mutationFn: async ({ workflowId, data }: CreateRunParams) => {
-      if (!tenant) {
-        throw new Error('Tenant not found');
-      }
-
-      const res = await api.v1WorkflowRunCreate(tenant.metadata.id, data);
-      return res.data;
-    },
-    onSuccess: () => {
-      listRunsQuery.refetch();
-    },
-  });
-
-  return {
-    data: listRunsQuery.data?.rows || [],
-    pagination: listRunsQuery.data?.pagination,
-    isLoading: listRunsQuery.isLoading,
-    create: createRunMutation,
-    refetch: listRunsQuery.refetch,
-
-    // Filter state management
-    filters,
-    setFilters,
-    paginationState,
-    setPagination,
-  };
 }
