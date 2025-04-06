@@ -19,7 +19,7 @@ import { FaDiscord, FaPlay } from 'react-icons/fa';
 export type NavItem = {
   title: string;
   url: string;
-  icon: any;
+  icon: React.ElementType;
   isActive?: boolean;
   items?: NavItem[];
 };
@@ -27,7 +27,7 @@ export type NavItem = {
 export type SupportItem = {
   title: string;
   url: string;
-  icon: any;
+  icon: React.ElementType;
 };
 
 export type NavSection = {

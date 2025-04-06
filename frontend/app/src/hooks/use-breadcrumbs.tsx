@@ -1,13 +1,19 @@
+import { NavItem } from '@/pages/authenticated/dashboard/components/sidebar/main-nav';
 import * as React from 'react';
 
-interface Breadcrumb {
-  label: string;
+export interface BreadcrumbData {
+  title: string;
   url: string;
+  siblings?: NavItem[];
+  section?: string;
+  icon?: React.ElementType;
+  alwaysShowTitle?: boolean;
+  alwaysShowIcon?: boolean;
 }
 
 interface BreadcrumbContextType {
-  breadcrumbs: Breadcrumb[];
-  setBreadcrumbs: (breadcrumbs: Breadcrumb[]) => void;
+  breadcrumbs: BreadcrumbData[];
+  setBreadcrumbs: (breadcrumbs: BreadcrumbData[]) => void;
 }
 
 const BreadcrumbContext = React.createContext<
@@ -19,10 +25,15 @@ export function BreadcrumbProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [breadcrumbs, setBreadcrumbs] = React.useState<Breadcrumb[]>([]);
+  const [breadcrumbs, setBreadcrumbs] = React.useState<BreadcrumbData[]>([]);
 
   return (
-    <BreadcrumbContext.Provider value={{ breadcrumbs, setBreadcrumbs }}>
+    <BreadcrumbContext.Provider
+      value={{
+        breadcrumbs,
+        setBreadcrumbs,
+      }}
+    >
       {children}
     </BreadcrumbContext.Provider>
   );

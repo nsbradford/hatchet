@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useRunDetail } from '@/hooks/use-run-detail';
-import { AlertCircle, Clock } from 'lucide-react';
+import { AlertCircle, Check, Clock } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -21,10 +21,33 @@ import { getStatusBadgeColor } from '@/components/runs/columns';
 import { Code } from '@/components/ui/code';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
+import { useEffect } from 'react';
 
 export default function RunDetailPage() {
   const { runId } = useParams<{ runId: string }>();
-  const { run, isLoading, error } = useRunDetail(runId || '');
+  const { data, isLoading, error } = useRunDetail(runId || '');
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  const run = data?.run;
+
+  useEffect(() => {
+    if (!run) {
+      return;
+    }
+
+    const breadcrumbs = [
+      {
+        title: run?.displayName || '',
+        url: `/runs/${runId}`,
+        icon: Check,
+        alwaysShowIcon: true,
+      },
+    ];
+
+    setBreadcrumbs(breadcrumbs);
+  }, [run, runId, setBreadcrumbs]);
 
   if (isLoading) {
     return (

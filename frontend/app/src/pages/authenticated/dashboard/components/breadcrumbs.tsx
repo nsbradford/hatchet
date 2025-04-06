@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { BreadcrumbData, useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 
 // Use the existing NavItem type from main-nav
 type NavItem = MainNavItem;
@@ -29,6 +30,8 @@ export function BreadcrumbNav() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const navStructure = getMainNavLinks(location.pathname);
+
+  const { breadcrumbs } = useBreadcrumbs();
 
   // Flattened navigation map for easy lookup
   const navMap = new Map<string, NavItem>();
@@ -84,68 +87,83 @@ export function BreadcrumbNav() {
 
   // Build breadcrumb path based on current location
   const pathSegments = location.pathname.split('/').filter(Boolean);
-  const breadcrumbItems: {
-    title: string;
-    url: string;
-    isLast: boolean;
-    siblings?: NavItem[];
-    section?: string;
-    icon?: React.ElementType;
-  }[] = [];
+  const breadcrumbItemsFromNav: BreadcrumbData[] = useMemo(() => {
+    const breadcrumbItemsFromNav: BreadcrumbData[] = [];
+    // Build path segments and find matching nav items
+    let currentPath = '';
+    for (let i = 0; i < pathSegments.length; i++) {
+      currentPath += '/' + pathSegments[i];
+      const navItem = navMap.get(currentPath);
 
-  // Build path segments and find matching nav items
-  let currentPath = '';
-  for (let i = 0; i < pathSegments.length; i++) {
-    currentPath += '/' + pathSegments[i];
-    const navItem = navMap.get(currentPath);
+      if (navItem) {
+        // Find siblings for the current item
+        const parentPath =
+          i === 0 ? '/' : `/${pathSegments.slice(0, i).join('/')}`;
+        const siblings = siblingsByPath.get(parentPath) || [];
 
-    if (navItem) {
-      // Find siblings for the current item
-      const parentPath =
-        i === 0 ? '/' : `/${pathSegments.slice(0, i).join('/')}`;
-      const siblings = siblingsByPath.get(parentPath) || [];
-
-      // Get section name for first-level items
-      let sectionName;
-      if (i === 0) {
-        const section = sectionItemsByRootPath.get(pathSegments[0]);
-        if (section) {
-          sectionName = section.label;
+        // Get section name for first-level items
+        let sectionName;
+        if (i === 0) {
+          const section = sectionItemsByRootPath.get(pathSegments[0]);
+          if (section) {
+            sectionName = section.label;
+          }
         }
-      }
 
-      breadcrumbItems.push({
-        title: navItem.title,
-        url: navItem.url,
-        isLast: i === pathSegments.length - 1,
-        siblings: siblings.length > 1 ? siblings : undefined,
-        section: sectionName,
-        icon: navItem.icon,
-      });
+        breadcrumbItemsFromNav.push({
+          title: navItem.title,
+          url: navItem.url,
+          siblings: siblings.length > 1 ? siblings : undefined,
+          section: sectionName,
+          icon: navItem.icon,
+        });
+      }
     }
-  }
+    return breadcrumbItemsFromNav;
+  }, [navMap, pathSegments, sectionItemsByRootPath, siblingsByPath]);
+
+  const breadcrumbItems = useMemo<
+    (BreadcrumbData & { isLast: boolean; isFirst: boolean })[]
+  >(() => {
+    const mergedBreadcrumbs = [...breadcrumbItemsFromNav, ...breadcrumbs];
+
+    return mergedBreadcrumbs.map((item, index) => ({
+      ...item,
+      alwaysShowTitle: item.alwaysShowTitle ?? true,
+      alwaysShowIcon: item.alwaysShowIcon ?? true,
+      isLast: index === mergedBreadcrumbs.length - 1,
+      isFirst: index === 0,
+    }));
+  }, [breadcrumbItemsFromNav, breadcrumbs]);
 
   return (
     <Breadcrumb>
-      <BreadcrumbList>
+      <BreadcrumbList className="flex w-full items-center">
         {breadcrumbItems.map((item, index) => (
-          <BreadcrumbItem key={item.url}>
+          <BreadcrumbItem
+            key={item.url + index}
+            className={`flex-shrink overflow-hidden ${item.isLast ? 'flex-1' : 'max-w-fit'}`}
+          >
             {item.isLast ? (
               item.siblings ? (
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-1 font-normal text-foreground">
-                    {index === 0 && item.icon && (
-                      <item.icon className="mr-2 h-4 w-4" />
+                  <DropdownMenuTrigger className="flex items-center gap-1 font-normal text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+                    {(item.isFirst || item.alwaysShowIcon) && item.icon && (
+                      <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />
                     )}
-                    {item.title}
-                    {item.isLast && <ChevronDown className="h-4 w-4" />}
+                    <span className="overflow-hidden text-ellipsis">
+                      {item.title}
+                    </span>
+                    {item.isLast && (
+                      <ChevronDown className="h-4 w-4 flex-shrink-0 ml-1" />
+                    )}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
-                    {item.siblings.map((sibling) => (
-                      <DropdownMenuItem key={sibling.url} asChild>
+                    {item.siblings.map((sibling, index) => (
+                      <DropdownMenuItem key={sibling.url + index} asChild>
                         <BreadcrumbLink to={sibling.url}>
                           {sibling.icon && (
-                            <sibling.icon className="mr-2 h-4 w-4" />
+                            <sibling.icon className="mr-2 h-4 w-4 flex-shrink-0" />
                           )}
                           {sibling.title}
                         </BreadcrumbLink>
@@ -154,23 +172,31 @@ export function BreadcrumbNav() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                <BreadcrumbPage className="whitespace-nowrap overflow-hidden text-ellipsis">
+                  {item.title}
+                </BreadcrumbPage>
               )
             ) : item.siblings ? (
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 font-normal text-foreground">
-                  {index === 0 && item.icon && (
-                    <item.icon className="mr-2 h-4 w-4" />
+                <DropdownMenuTrigger className="flex items-center gap-1 font-normal text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+                  {(item.isFirst || item.alwaysShowIcon) && item.icon && (
+                    <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />
                   )}
-                  {!(index !== 0 || isMobile) && item.title}
-                  {item.isLast && <ChevronDown className="h-4 w-4" />}
+                  {(item.alwaysShowTitle || !(item.isFirst || isMobile)) && (
+                    <span className="overflow-hidden text-ellipsis">
+                      {item.title}
+                    </span>
+                  )}
+                  {item.isLast && (
+                    <ChevronDown className="h-4 w-4 flex-shrink-0 ml-1" />
+                  )}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  {item.siblings.map((sibling) => (
-                    <DropdownMenuItem key={sibling.url} asChild>
+                  {item.siblings.map((sibling, index) => (
+                    <DropdownMenuItem key={sibling.url + index} asChild>
                       <BreadcrumbLink to={sibling.url}>
                         {sibling.icon && (
-                          <sibling.icon className="mr-2 h-4 w-4" />
+                          <sibling.icon className="mr-2 h-4 w-4 flex-shrink-0" />
                         )}
                         {sibling.title}
                       </BreadcrumbLink>
@@ -179,12 +205,21 @@ export function BreadcrumbNav() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <BreadcrumbLink to={item.url}>
-                {index === 0 && item.icon && (
-                  <item.icon className="mr-2 h-4 w-4" />
+              <BreadcrumbLink
+                to={item.url}
+                className="whitespace-nowrap overflow-hidden text-ellipsis inline-flex items-center"
+              >
+                {(item.isFirst || item.alwaysShowIcon) && item.icon && (
+                  <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />
                 )}
-                {item.title}
-                {item.isLast && <ChevronDown className="h-4 w-4" />}
+                {(item.alwaysShowTitle || !(item.isFirst || isMobile)) && (
+                  <span className="overflow-hidden text-ellipsis">
+                    {item.title}
+                  </span>
+                )}
+                {item.isLast && (
+                  <ChevronDown className="h-4 w-4 flex-shrink-0 ml-1" />
+                )}
               </BreadcrumbLink>
             )}
             {!item.isLast && <BreadcrumbSeparator />}
