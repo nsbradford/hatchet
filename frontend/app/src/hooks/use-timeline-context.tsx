@@ -50,8 +50,8 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
       const times: number[] = [];
 
       // Add timestamps if they exist and are valid
-      if (isValidTimestamp(item.createdAt)) {
-        times.push(new Date(item.createdAt!).getTime());
+      if (isValidTimestamp(item.metadata.createdAt)) {
+        times.push(new Date(item.metadata.createdAt!).getTime());
       }
 
       if (isValidTimestamp(item.startedAt)) {

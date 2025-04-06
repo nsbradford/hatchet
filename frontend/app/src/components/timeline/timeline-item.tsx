@@ -1,4 +1,4 @@
-import { intervalToDuration, Duration } from 'date-fns';
+import { intervalToDuration } from 'date-fns';
 import { getStatusBadgeColor } from '../runs/columns';
 import { TimelineItemProps } from './types';
 import { V1TaskStatus } from '@/lib/api';
@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { formatDuration } from '../runs/run-id';
 
 // Helper to check if a timestamp is valid (not empty or the special "0001-01-01" value)
 const isValidTimestamp = (timestamp?: string): boolean => {
@@ -37,13 +38,13 @@ export function TimelineItem({ item, onClick }: TimelineItemProps) {
   };
 
   // Check if item has a valid createdAt timestamp
-  if (!isValidTimestamp(item.createdAt)) {
+  if (!isValidTimestamp(item.metadata.createdAt)) {
     return undefined;
   }
 
   // At this point we know createdAt is valid and not undefined
-  const itemCreatedAt = new Date(item.createdAt!).getTime();
-  const createdAtDate = new Date(item.createdAt!);
+  const itemCreatedAt = new Date(item.metadata.createdAt!).getTime();
+  const createdAtDate = new Date(item.metadata.createdAt!);
 
   // Handle items with only createdAt (pending items)
   if (!isValidTimestamp(item.startedAt)) {
@@ -141,28 +142,6 @@ export function TimelineItem({ item, onClick }: TimelineItemProps) {
       </div>
     </>
   );
-}
-
-function formatDuration(duration: Duration, rawTimeMs: number): string {
-  const parts = [];
-
-  if (duration.hours) {
-    parts.push(`${duration.hours}h`);
-  }
-
-  if (duration.minutes) {
-    parts.push(`${duration.minutes}m`);
-  }
-
-  if (duration.seconds || (!duration.hours && !duration.minutes)) {
-    parts.push(`${duration.seconds || 0}s`);
-  }
-
-  // Calculate milliseconds as the remainder after accounting for hours, minutes, and seconds
-  const ms = rawTimeMs % 1000;
-  parts.push(`${ms}ms`);
-
-  return parts.join(' ');
 }
 
 function RunBar({ status }: { status: V1TaskStatus }) {

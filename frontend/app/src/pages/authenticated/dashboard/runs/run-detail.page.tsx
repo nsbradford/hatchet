@@ -12,6 +12,7 @@ import { RunChildrenCardRoot } from '@/components/runs/run-children';
 import { RunOutputCard } from '@/components/runs/run-output-card';
 import useTenant from '@/hooks/use-tenant';
 import { WrongTenant } from '@/components/errors/unauthorized';
+import { RunId } from '@/components/runs/run-id';
 
 export default function RunDetailPage() {
   const { runId } = useParams<{ runId: string }>();
@@ -29,7 +30,7 @@ export default function RunDetailPage() {
 
     const breadcrumbs = [
       {
-        title: run?.displayName || '',
+        title: <RunId run={data?.tasks[0]} />,
         url: `/runs/${runId}`,
         icon: (className: string) => (
           <Badge
@@ -48,7 +49,7 @@ export default function RunDetailPage() {
     return () => {
       setBreadcrumbs([]);
     };
-  }, [run, runId, setBreadcrumbs]);
+  }, [data?.tasks, run, runId, setBreadcrumbs]);
 
   if (isLoading) {
     return (
@@ -103,7 +104,9 @@ export default function RunDetailPage() {
           tooltipContent={run.status}
           animated={isRunning}
         />
-        <h1 className="text-2xl font-bold">{run.displayName}</h1>
+        <h1 className="text-2xl font-bold">
+          <RunId run={data?.tasks[0]} />
+        </h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">

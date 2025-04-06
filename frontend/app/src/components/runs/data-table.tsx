@@ -100,6 +100,11 @@ export function DataTable<TData, TValue>({
     manualFiltering: !!onSearchChange,
   });
 
+  const styles = {
+    status: 'p-0 w-[40px] bg-muted/20',
+    runId: 'p-0 bg-muted/20 border-r border-border',
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2 justify-between items-center">
@@ -163,11 +168,7 @@ export function DataTable<TData, TValue>({
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className={cn({
-                      'w-[40px] bg-muted/80': header.id === 'status',
-                      'max-w-[180px] w-[180px] bg-muted/80 border-r border-border':
-                        header.id === 'startedAt',
-                    })}
+                    className={cn(styles[header.id as keyof typeof styles])}
                   >
                     {header.isPlaceholder
                       ? null
@@ -190,11 +191,9 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={cn({
-                        'p-0 w-[40px] bg-muted/80': cell.column.id === 'status',
-                        'p-0 max-w-[180px] w-[180px] bg-muted/80 border-r border-border':
-                          cell.column.id === 'startedAt',
-                      })}
+                      className={cn(
+                        styles[cell.column.id as keyof typeof styles],
+                      )}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

@@ -16,10 +16,9 @@ import {
 } from '@/components/ui/tooltip';
 import { DataTableColumnHeader } from './data-table-column-header';
 import { DataTableRowActions } from './data-table-row-actions';
-import { formatDuration, intervalToDuration } from 'date-fns';
-import type { Duration } from 'date-fns';
-import { Code } from '../ui/code';
-import { Link } from 'react-router-dom';
+import { intervalToDuration } from 'date-fns';
+import { formatDuration, RunId } from './run-id';
+import { Clock } from 'lucide-react';
 
 export const statusOptions = [
   { label: 'Pending', value: 'PENDING' },
@@ -65,6 +64,15 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: 'runId',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Run ID" />
+    ),
+    cell: ({ row }) => <RunId run={row.original} />,
+    enableSorting: true,
+    enableHiding: false,
+  },
+  {
     accessorKey: 'startedAt',
     header: ({ column }) => (
       <DataTableColumnHeader
@@ -101,40 +109,7 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
     enableSorting: true,
     enableHiding: true,
   },
-  {
-    accessorKey: 'displayName',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Run ID" />
-    ),
-    cell: ({ row }) => (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <Link
-                to={`/runs/${row.original.metadata.id}`}
-                className="hover:underline text-blue-500"
-              >
-                {row.original.displayName}
-              </Link>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <Code
-              variant="inline"
-              className="font-medium"
-              language={'plaintext'}
-              value={row.original.metadata.id}
-            >
-              {row.original.metadata.id}
-            </Code>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    ),
-    enableSorting: true,
-    enableHiding: false,
-  },
+
   {
     accessorKey: 'workflowName',
     header: ({ column }) => (
@@ -177,7 +152,7 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
     ),
     cell: ({ row }) => {
       const startedAt = row.getValue('startedAt') as string | null;
-      const finishedAt = row.getValue('finishedAt') as string | null;
+      const finishedAt = row.original.finishedAt as string | null;
       const status = row.getValue('status') as V1TaskStatus;
 
       if (!startedAt) {
@@ -191,25 +166,8 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
       // Calculate duration
       const duration = intervalToDuration({ start, end });
 
-      // Custom formatting to make it more compact
-      const formatCompactDuration = (duration: Duration) => {
-        const parts = [];
-        if (duration.days) {
-          parts.push(`${duration.days}d`);
-        }
-        if (duration.hours) {
-          parts.push(`${duration.hours}h`);
-        }
-        if (duration.minutes) {
-          parts.push(`${duration.minutes}m`);
-        }
-        if (duration.seconds || !parts.length) {
-          parts.push(`${duration.seconds || 0}s`);
-        }
-        return parts.length ? parts.join(' ') : '< 1s';
-      };
-
-      const compactDuration = formatCompactDuration(duration);
+      const rawDuration = end.getTime() - start.getTime();
+      const compactDuration = formatDuration(duration, rawDuration);
 
       // For RUNNING status, add a visual indicator
       const isRunning = status === 'RUNNING';
@@ -218,17 +176,17 @@ export const columns: ColumnDef<V1TaskSummary>[] = [
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className={isRunning ? 'animate-pulse' : ''}>
-                {compactDuration}
-                {isRunning && '...'}
-              </span>
+              <div className="flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className={isRunning ? 'animate-pulse' : ''}>
+                  {compactDuration}
+                  {isRunning && '...'}
+                </span>
+              </div>
             </TooltipTrigger>
             <TooltipContent>
               {isRunning ? 'Running for ' : ''}
-              {formatDuration(duration, {
-                format: ['days', 'hours', 'minutes', 'seconds'],
-                delimiter: ', ',
-              }) || '< 1 second'}
+              {formatDuration(duration, rawDuration)}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
