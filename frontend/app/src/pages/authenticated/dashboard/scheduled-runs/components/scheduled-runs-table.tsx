@@ -265,7 +265,7 @@ export function ScheduledRunsTable({
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="Delete Scheduled Run"
-        description={`Are you sure you want to delete the scheduled run "${selectedRun?.workflowName}"?`}
+        description={`Are you sure you want to delete the scheduled run "${selectedRun?.workflowName}"? This will stop all future runs.`}
         confirmationText="confirm"
         confirmButtonText="Delete"
         onConfirm={handleDeleteConfirm}

@@ -16,14 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import {
-  MoreHorizontal,
-  Trash2,
-  Play,
-  Pause,
-  CalendarDays,
-  RefreshCw,
-} from 'lucide-react';
+import { MoreHorizontal, Trash2, CalendarDays, RefreshCw } from 'lucide-react';
 import useCrons from '@/hooks/use-crons';
 import {
   PageSelector,
@@ -32,9 +25,15 @@ import {
   usePagination,
 } from '@/components/ui/pagination';
 import { Time } from '@/components/ui/time';
+import { DestructiveDialog } from '@/components/ui/dialog/destructive-dialog';
+import { useState } from 'react';
+import { CronWorkflows } from '@/lib/api';
+import cronstrue from 'cronstrue';
 
 export default function CronJobsTable() {
   const paginationManager = usePagination();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedCron, setSelectedCron] = useState<CronWorkflows>();
 
   const {
     data: crons = [],
@@ -47,6 +46,7 @@ export default function CronJobsTable() {
   const handleDeleteCron = async (cronId: string) => {
     try {
       await deleteCron.mutateAsync(cronId);
+      setDeleteDialogOpen(false);
     } catch (error) {
       console.error('Failed to delete cron job:', error);
     }
@@ -67,16 +67,17 @@ export default function CronJobsTable() {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Workflow</TableHead>
-            <TableHead>Schedule</TableHead>
+            <TableHead>Expression</TableHead>
+            <TableHead>Parsed</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {crons.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={7} className="h-24 text-center">
                 No cron jobs found.
               </TableCell>
             </TableRow>
@@ -94,6 +95,15 @@ export default function CronJobsTable() {
                   <div className="flex flex-col">
                     <span className="text-xs text-muted-foreground">
                       {cron.cron}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="text-sm">
+                      {cron.cron
+                        ? cronstrue.toString(cron.cron)
+                        : 'No schedule'}
                     </span>
                   </div>
                 </TableCell>
@@ -119,18 +129,6 @@ export default function CronJobsTable() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title={cron.enabled ? 'Pause' : 'Activate'}
-                      disabled
-                    >
-                      {cron.enabled ? (
-                        <Pause className="h-4 w-4 text-amber-600" />
-                      ) : (
-                        <Play className="h-4 w-4 text-green-600" />
-                      )}
-                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -143,7 +141,11 @@ export default function CronJobsTable() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => handleDeleteCron(cron.metadata.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCron(cron);
+                            setDeleteDialogOpen(true);
+                          }}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
@@ -161,6 +163,18 @@ export default function CronJobsTable() {
         <PageSizeSelector />
         <PageSelector variant="dropdown" />
       </Pagination>
+
+      <DestructiveDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Cron Job"
+        description={`Are you sure you want to delete this cron job? This action will stop all future runs.`}
+        confirmationText={selectedCron?.name || 'confirm'}
+        confirmButtonText="Delete"
+        onConfirm={() =>
+          selectedCron && handleDeleteCron(selectedCron.metadata.id)
+        }
+      />
     </div>
   );
 }
