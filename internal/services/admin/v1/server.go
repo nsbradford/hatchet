@@ -64,7 +64,7 @@ func (a *AdminServiceImpl) CancelTasks(ctx context.Context, req *contracts.Cance
 		var additionalMetadataFilters map[string]interface{}
 
 		if len(req.Filter.AdditionalMetadata) > 0 {
-			additionalMetadataFilters := make(map[string]interface{})
+			additionalMetadataFilters = make(map[string]interface{})
 			for _, v := range req.Filter.AdditionalMetadata {
 				kv_pairs := strings.Split(v, ":")
 				if len(kv_pairs) == 2 {
@@ -187,7 +187,7 @@ func (a *AdminServiceImpl) ReplayTasks(ctx context.Context, req *contracts.Repla
 		var additionalMetadataFilters map[string]interface{}
 
 		if len(req.Filter.AdditionalMetadata) > 0 {
-			additionalMetadataFilters := make(map[string]interface{})
+			additionalMetadataFilters = make(map[string]interface{})
 			for _, v := range req.Filter.AdditionalMetadata {
 				kv_pairs := strings.Split(v, ":")
 				if len(kv_pairs) == 2 {
@@ -591,6 +591,7 @@ func getCreateTaskOpts(tasks []*contracts.CreateTaskOpts, kind string) ([]v1.Cre
 			DesiredWorkerLabels: affinity,
 			TriggerConditions:   make([]v1.CreateStepMatchConditionOpt, 0),
 			RateLimits:          make([]v1.CreateWorkflowStepRateLimitOpts, 0), // Initialize to avoid nil
+			ScheduleTimeout:     stepCp.ScheduleTimeout,
 		}
 
 		// Safely set Parents
