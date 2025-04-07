@@ -94,8 +94,14 @@ export default function useWorkers({
 
       const res = await api.workerList(tenant?.metadata.id || '');
 
+      const sorted = (res?.data?.rows || []).sort((a, b) => {
+        const aCreatedAt = new Date(a.metadata.createdAt);
+        const bCreatedAt = new Date(b.metadata.createdAt);
+        return bCreatedAt.getTime() - aCreatedAt.getTime();
+      });
+
       // Client-side filtering for search if API doesn't support it
-      let filteredRows = res.data.rows || [];
+      let filteredRows = sorted || [];
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         filteredRows = filteredRows.filter((worker) =>
