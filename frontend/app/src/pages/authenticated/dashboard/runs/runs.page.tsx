@@ -14,7 +14,7 @@ export default function RunsPage() {
           }}
           initialPagination={{
             currentPage: 1,
-            pageSize: 100,
+            pageSize: 1000,
           }}
           refetchInterval={5000}
         >

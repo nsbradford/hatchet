@@ -10,13 +10,4 @@ export const scheduledRunsRoutes: RouteObject[] = [
         };
       }),
   },
-  {
-    path: '/scheduled/:scheduledRunId',
-    lazy: async () =>
-      import('./scheduled-runs.page').then((res) => {
-        return {
-          Component: res.default,
-        };
-      }),
-  },
 ];
