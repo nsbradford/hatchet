@@ -6,7 +6,7 @@ import {
   usePagination,
   PaginationManagerNoOp,
   PaginationManager,
-} from './pagination-context';
+} from '../../../hooks/use-pagination';
 
 export {
   Pagination,

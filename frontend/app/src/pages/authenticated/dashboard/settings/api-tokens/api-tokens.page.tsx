@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ApiTokensProvider } from '@/hooks/use-api-tokens';
-import { TokensTable } from '@/components/tokens/tokens-table';
+import { TokensTable } from '@/pages/authenticated/dashboard/settings/api-tokens/components/tokens-table';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Dialog } from '@/components/ui/dialog/dialog';
@@ -11,6 +11,15 @@ import docs from '@/docs-meta-data';
 import { apiTokens } from '@/lib/can/features/api-tokens.permissions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Lock } from 'lucide-react';
+import { PaginationProvider } from '@/components/ui/pagination';
+import {
+  HeadlineActionItem,
+  HeadlineActions,
+  Headline,
+  PageTitle,
+} from '@/components/ui/page-header';
+import BasicLayout from '@/components/layouts/basic.layout';
+
 export default function ApiTokensPage() {
   return (
     <ApiTokensProvider>
@@ -34,53 +43,54 @@ function ApiTokensContent() {
   );
 
   return (
-    <div className="flex-grow h-full w-full">
-      <div className="mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-row justify-between items-center">
-          <h2 className="text-2xl font-semibold leading-tight text-foreground">
-            API Tokens
-          </h2>
-          <div className="flex flex-row items-center gap-2">
+    <BasicLayout>
+      <Headline>
+        <PageTitle description="API tokens are used by workers to connect with the Hatchet">
+          API Tokens
+        </PageTitle>
+        <HeadlineActions>
+          <HeadlineActionItem>
             <DocsButton doc={docs.home.setup} size="icon" />
-            {canManage && <CreateTokenButton />}
-          </div>
-        </div>
-        <p className="text-gray-700 dark:text-gray-300 my-4">
-          API tokens are used by workers to connect with the Hatchet API and
-          engine.
-        </p>
-        {canManageMessage && (
-          <Alert variant="warning">
-            <Lock className="w-4 h-4 mr-2" />
-            <AlertTitle>Role required</AlertTitle>
-            <AlertDescription>{canManageMessage}</AlertDescription>
-          </Alert>
-        )}
-        {canManage && (
-          <>
-            <Separator className="my-4" />
+          </HeadlineActionItem>
+          {canManage && (
+            <HeadlineActionItem>
+              {canManage && <CreateTokenButton />}
+            </HeadlineActionItem>
+          )}
+        </HeadlineActions>
+      </Headline>
 
-            <TokensTable
-              emptyState={
-                <div className="flex flex-col items-center justify-center gap-4 py-8">
-                  <p className="text-md">No API tokens found.</p>
-                  <p className="text-sm text-muted-foreground">
-                    Create a new API token to get started.
-                  </p>
-                  {canManage && <CreateTokenButton />}
-                  <DocsButton doc={docs.home.setup} />
-                </div>
-              }
-            />
-          </>
-        )}
+      {canManageMessage && (
+        <Alert variant="warning">
+          <Lock className="w-4 h-4 mr-2" />
+          <AlertTitle>Role required</AlertTitle>
+          <AlertDescription>{canManageMessage}</AlertDescription>
+        </Alert>
+      )}
+      {canManage && (
+        <PaginationProvider>
+          <Separator className="my-4" />
 
-        {showTokenDialog && (
-          <Dialog open={showTokenDialog} onOpenChange={setShowTokenDialog}>
-            <CreateTokenDialog close={() => setShowTokenDialog(false)} />
-          </Dialog>
-        )}
-      </div>
-    </div>
+          <TokensTable
+            emptyState={
+              <div className="flex flex-col items-center justify-center gap-4 py-8">
+                <p className="text-md">No API tokens found.</p>
+                <p className="text-sm text-muted-foreground">
+                  Create a new API token to get started.
+                </p>
+                {canManage && <CreateTokenButton />}
+                <DocsButton doc={docs.home.setup} />
+              </div>
+            }
+          />
+        </PaginationProvider>
+      )}
+
+      {showTokenDialog && (
+        <Dialog open={showTokenDialog} onOpenChange={setShowTokenDialog}>
+          <CreateTokenDialog close={() => setShowTokenDialog(false)} />
+        </Dialog>
+      )}
+    </BasicLayout>
   );
 }

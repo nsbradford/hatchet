@@ -10,6 +10,13 @@ import useCan from '@/hooks/use-can';
 import { members } from '@/lib/can/features/members.permissions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CreateInviteForm } from './components/create-invite-form';
+import BasicLayout from '@/components/layouts/basic.layout';
+import {
+  Headline,
+  PageTitle,
+  HeadlineActions,
+  HeadlineActionItem,
+} from '@/components/ui/page-header';
 
 export default function MembersPage() {
   return (
@@ -43,55 +50,50 @@ function MembersContent() {
   );
 
   return (
-    <div className="flex-grow h-full w-full">
-      <div className="mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-row justify-between items-center">
-          <h2 className="text-2xl font-semibold leading-tight text-foreground">
-            Team
-          </h2>
-          <div className="flex flex-row items-center gap-2">
-            {/* <DocsButton doc={docs.home.setup} size="icon" /> */}
+    <BasicLayout>
+      <Headline>
+        <PageTitle description="Manage your team">Team</PageTitle>
+        <HeadlineActions>
+          <HeadlineActionItem>
             <InviteMemberButton />
-          </div>
-        </div>
-        <p className="text-gray-700 dark:text-gray-300 my-4">
-          Manage team members and their permissions in your workspace.
-        </p>
-        {(canViewMembersMessage || canInviteMessage) && (
-          <Alert variant="warning">
-            <Lock className="w-4 h-4 mr-2" />
-            <AlertTitle>Role required</AlertTitle>
-            <AlertDescription>
-              {canViewMembersMessage || canInviteMessage}
-            </AlertDescription>
-          </Alert>
-        )}
-        {canViewMembers && (
-          <>
-            <Separator className="my-4" />
+          </HeadlineActionItem>
+        </HeadlineActions>
+      </Headline>
 
-            <h3 className="text-xl font-semibold leading-tight text-foreground mb-4">
-              Active Members
-            </h3>
-            <MembersTable
-              emptyState={
-                <div className="flex flex-col items-center justify-center gap-4 py-8">
-                  <p className="text-sm text-muted-foreground">
-                    No members found. Invite members to get started.
-                  </p>
-                  {canInvite && <InviteMemberButton />}
-                </div>
-              }
-            />
-          </>
-        )}
+      {(canViewMembersMessage || canInviteMessage) && (
+        <Alert variant="warning">
+          <Lock className="w-4 h-4 mr-2" />
+          <AlertTitle>Role required</AlertTitle>
+          <AlertDescription>
+            {canViewMembersMessage || canInviteMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+      {canViewMembers && (
+        <>
+          <Separator className="my-4" />
 
-        {showInviteDialog && (
-          <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-            <CreateInviteForm close={() => setShowInviteDialog(false)} />
-          </Dialog>
-        )}
-      </div>
-    </div>
+          <h3 className="text-xl font-semibold leading-tight text-foreground mb-4">
+            Active Members
+          </h3>
+          <MembersTable
+            emptyState={
+              <div className="flex flex-col items-center justify-center gap-4 py-8">
+                <p className="text-sm text-muted-foreground">
+                  No members found. Invite members to get started.
+                </p>
+                {canInvite && <InviteMemberButton />}
+              </div>
+            }
+          />
+        </>
+      )}
+
+      {showInviteDialog && (
+        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+          <CreateInviteForm close={() => setShowInviteDialog(false)} />
+        </Dialog>
+      )}
+    </BasicLayout>
   );
 }

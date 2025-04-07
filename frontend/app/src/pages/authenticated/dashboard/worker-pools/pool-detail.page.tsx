@@ -11,6 +11,15 @@ import {
   WorkerTable,
   type WorkerStatus,
 } from './components';
+import BasicLayout from '@/components/layouts/basic.layout';
+import { DocsButton } from '@/components/ui/docs-button';
+import {
+  Headline,
+  PageTitle,
+  HeadlineActions,
+  HeadlineActionItem,
+} from '@/components/ui/page-header';
+import docs from '@/docs-meta-data';
 
 // Worker action types for code reusability
 type WorkerAction = 'pause' | 'resume' | 'stop';
@@ -154,101 +163,104 @@ export default function PoolDetailPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+    <BasicLayout>
+      <Headline>
+        <PageTitle description="Manage workers in a worker pool">
+          {decodedPoolName}
+        </PageTitle>
+        <HeadlineActions>
+          <HeadlineActionItem>
+            <DocsButton doc={docs.home.workers} size="icon" />
+          </HeadlineActionItem>
+        </HeadlineActions>
+      </Headline>
+      <Separator className="my-4" />
+
+      {/* Stats Cards */}
       <div className="mb-6">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold">{decodedPoolName}</h1>
-          <p className="text-muted-foreground">
-            Worker pool details and management
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="mb-6">
-          <WorkerStats
-            stats={poolStats}
-            isLoading={isLoading}
-            onFilterChange={handleStatusChange}
-            currentFilter={filterStatus}
-          />
-        </div>
-
-        <div className="mb-4">
-          <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-2">
-            <h3 className="text-lg font-medium">
-              {filterStatus === 'all'
-                ? 'All Workers'
-                : `${filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)} Workers`}
-            </h3>
-
-            {/* Worker Filters */}
-            <WorkerFilter
-              selectedStatus={filterStatus}
-              onStatusChange={handleStatusChange}
-              counts={{
-                all: poolStats.total,
-                active: poolStats.active,
-                paused: poolStats.paused,
-                inactive: poolStats.inactive,
-              }}
-            />
-
-            {/* Bulk Actions */}
-            {selectedWorkers.length > 0 ? (
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleBulkAction('resume')}
-                >
-                  <Play className="h-4 w-4 mr-1" />
-                  Resume Selected
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleBulkAction('pause')}
-                >
-                  <Pause className="h-4 w-4 mr-1" />
-                  Pause Selected
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-red-600"
-                  onClick={() => handleBulkAction('stop')}
-                >
-                  <StopCircle className="h-4 w-4 mr-1" />
-                  Stop Selected
-                </Button>
-                <Button size="sm" variant="ghost" onClick={clearSelection}>
-                  Clear Selection ({selectedWorkers.length})
-                </Button>
-              </div>
-            ) : (
-              <Button size="sm" variant="outline" onClick={selectAllWorkers}>
-                Select All
-              </Button>
-            )}
-          </div>
-          <Separator className="my-2" />
-
-          {/* Worker Table with Filtering */}
-          <WorkerTable
-            workers={poolWorkers}
-            poolName={decodedPoolName}
-            isLoading={isLoading}
-            selectedWorkers={selectedWorkers}
-            toggleSelectWorker={toggleSelectWorker}
-            selectAllWorkers={selectAllWorkers}
-            clearSelection={clearSelection}
-            handleResumeWorker={handleResumeWorker}
-            handlePauseWorker={handlePauseWorker}
-            handleStopWorker={handleStopWorker}
-            filterStatus={filterStatus}
-          />
-        </div>
+        <WorkerStats
+          stats={poolStats}
+          isLoading={isLoading}
+          onFilterChange={handleStatusChange}
+          currentFilter={filterStatus}
+        />
       </div>
-    </div>
+
+      <div className="mb-4">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-2">
+          <h3 className="text-lg font-medium">
+            {filterStatus === 'all'
+              ? 'All Workers'
+              : `${filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)} Workers`}
+          </h3>
+
+          {/* Worker Filters */}
+          <WorkerFilter
+            selectedStatus={filterStatus}
+            onStatusChange={handleStatusChange}
+            counts={{
+              all: poolStats.total,
+              active: poolStats.active,
+              paused: poolStats.paused,
+              inactive: poolStats.inactive,
+            }}
+          />
+
+          {/* Bulk Actions */}
+          {selectedWorkers.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleBulkAction('resume')}
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Resume Selected
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleBulkAction('pause')}
+              >
+                <Pause className="h-4 w-4 mr-1" />
+                Pause Selected
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-red-600"
+                onClick={() => handleBulkAction('stop')}
+              >
+                <StopCircle className="h-4 w-4 mr-1" />
+                Stop Selected
+              </Button>
+              <Button size="sm" variant="ghost" onClick={clearSelection}>
+                Clear Selection ({selectedWorkers.length})
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" onClick={selectAllWorkers}>
+              Select All
+            </Button>
+          )}
+        </div>
+        <Separator className="my-2" />
+
+        {/* Worker Table with Filtering */}
+        <WorkerTable
+          workers={poolWorkers}
+          poolName={decodedPoolName}
+          isLoading={isLoading}
+          selectedWorkers={selectedWorkers}
+          toggleSelectWorker={toggleSelectWorker}
+          selectAllWorkers={selectAllWorkers}
+          clearSelection={clearSelection}
+          handleResumeWorker={handleResumeWorker}
+          handlePauseWorker={handlePauseWorker}
+          handleStopWorker={handleStopWorker}
+          filterStatus={filterStatus}
+        />
+      </div>
+    </BasicLayout>
   );
 }

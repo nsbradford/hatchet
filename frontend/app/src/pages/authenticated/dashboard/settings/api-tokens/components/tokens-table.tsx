@@ -25,8 +25,6 @@ import useCan from '@/hooks/use-can';
 import {
   ArrowDownIcon,
   ArrowUpIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ChevronsUpDownIcon,
   EyeOffIcon,
   SlidersHorizontalIcon,
@@ -40,6 +38,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { RevokeTokenForm } from '@/pages/authenticated/dashboard/settings/api-tokens/components/revoke-token-form';
+import {
+  Pagination,
+  PageSizeSelector,
+  PageSelector,
+} from '@/components/ui/pagination';
 
 // Create a DataTableColumnHeader component
 interface DataTableColumnHeaderProps<TData>
@@ -139,66 +142,6 @@ function DataTableViewOptions<TData>({
           })}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-// Create a DataTablePagination component
-interface DataTablePaginationProps<TData> {
-  table: Table<TData>;
-}
-
-function DataTablePagination<TData>({
-  table,
-}: DataTablePaginationProps<TData>) {
-  return (
-    <div className="flex items-center justify-between px-2 py-4">
-      <div className="flex-1 text-sm text-muted-foreground">
-        {table.getFilteredSelectedRowModel().rows.length} of{' '}
-        {table.getFilteredRowModel().rows.length} row(s) selected.
-      </div>
-      <div className="flex items-center space-x-6 lg:space-x-8">
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
-          <select
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => {
-              table.setPageSize(Number(e.target.value));
-            }}
-            className="h-8 w-[70px] rounded-md border border-input bg-background px-3"
-          >
-            {[10, 20, 30, 40, 50].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                {pageSize}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {table.getState().pagination.pageIndex + 1} of{' '}
-          {table.getPageCount()}
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            className="h-8 w-8 p-0"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <span className="sr-only">Go to previous page</span>
-            <ChevronLeftIcon className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            className="h-8 w-8 p-0"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <span className="sr-only">Go to next page</span>
-            <ChevronRightIcon className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -387,7 +330,12 @@ export function TokensTable({ emptyState }: TokensTableProps) {
           </TableBody>
         </UITable>
       </div>
-      <DataTablePagination table={table} />
+
+      <Pagination className="p-2 justify-between flex flex-row">
+        <PageSizeSelector />
+        <PageSelector variant="dropdown" />
+      </Pagination>
+
       {revokeToken && (
         <RevokeTokenForm
           apiToken={revokeToken}

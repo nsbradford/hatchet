@@ -1,5 +1,5 @@
 import { MoreHorizontal } from 'lucide-react';
-import { usePagination } from './pagination-context';
+import { usePagination } from '../../../hooks/use-pagination';
 import {
   PaginationItem,
   PaginationLink,

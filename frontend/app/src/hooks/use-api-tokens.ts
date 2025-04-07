@@ -17,8 +17,12 @@ import {
   PropsWithChildren,
   createElement,
 } from 'react';
+import {
+  PaginationManager,
+  PaginationManagerNoOp,
+} from '@/components/ui/pagination';
 
-// Types for filters and pagination
+// Types for filters
 interface TokensFilters {
   search?: string;
   sortBy?: string;
@@ -27,9 +31,10 @@ interface TokensFilters {
   toDate?: string;
 }
 
-interface TokensPagination {
-  currentPage: number;
-  pageSize: number;
+interface UseApiTokensOptions {
+  refetchInterval?: number;
+  initialFilters?: TokensFilters;
+  paginationManager?: PaginationManager;
 }
 
 // Main hook return type
@@ -48,27 +53,17 @@ interface ApiTokensState {
   // Added from context
   filters: TokensFilters;
   setFilters: (filters: TokensFilters) => void;
-  paginationState: TokensPagination;
-  setPagination: (pagination: TokensPagination) => void;
-}
-
-interface UseApiTokensOptions {
-  refetchInterval?: number;
-  initialFilters?: TokensFilters;
-  initialPagination?: TokensPagination;
 }
 
 export default function useApiTokens({
   refetchInterval,
   initialFilters = {},
-  initialPagination = { currentPage: 1, pageSize: 10 },
+  paginationManager = PaginationManagerNoOp,
 }: UseApiTokensOptions = {}): ApiTokensState {
   const { tenant } = useTenant();
 
-  // State from the former context
+  // State for filters only
   const [filters, setFilters] = useState<TokensFilters>(initialFilters);
-  const [paginationState, setPagination] =
-    useState<TokensPagination>(initialPagination);
 
   const listTokensQuery = useQuery({
     queryKey: [
@@ -79,17 +74,36 @@ export default function useApiTokens({
       filters.sortDirection,
       filters.fromDate,
       filters.toDate,
-      paginationState.currentPage,
-      paginationState.pageSize,
+      paginationManager?.currentPage,
+      paginationManager?.pageSize,
     ],
     queryFn: async () => {
       if (!tenant) {
-        return { rows: [], pagination: { current_page: 0, num_pages: 0 } };
+        const pagination = {
+          rows: [],
+          pagination: { current_page: 0, num_pages: 0 },
+        };
+        paginationManager?.setNumPages(pagination.pagination.num_pages);
+        return pagination;
       }
 
-      // In a real implementation, these params would be passed to the API
-      // This is a simplified example as the current API may not support these filters
-      const res = await api.apiTokenList(tenant?.metadata.id || '');
+      // Build query params
+      const queryParams: Record<string, any> = {
+        limit: paginationManager?.pageSize || 10,
+        offset:
+          (paginationManager?.currentPage - 1) * paginationManager?.pageSize ||
+          0,
+      };
+
+      if (filters.sortBy) {
+        queryParams.orderByField = filters.sortBy;
+        queryParams.orderByDirection = filters.sortDirection || 'asc';
+      }
+
+      const res = await api.apiTokenList(
+        tenant?.metadata.id || '',
+        queryParams,
+      );
 
       // Client-side filtering for search if API doesn't support it
       let filteredRows = res.data.rows || [];
@@ -117,39 +131,7 @@ export default function useApiTokens({
         });
       }
 
-      // Client-side sorting if API doesn't support it
-      if (filters.sortBy) {
-        filteredRows.sort((a, b) => {
-          let valueA: any;
-          let valueB: any;
-
-          switch (filters.sortBy) {
-            case 'name':
-              valueA = a.name;
-              valueB = b.name;
-              break;
-            case 'createdAt':
-              valueA = new Date(a.metadata.createdAt).getTime();
-              valueB = new Date(b.metadata.createdAt).getTime();
-              break;
-            case 'expiresAt':
-              valueA = new Date(a.expiresAt).getTime();
-              valueB = new Date(b.expiresAt).getTime();
-              break;
-            default:
-              return 0;
-          }
-
-          const direction = filters.sortDirection === 'desc' ? -1 : 1;
-          if (valueA < valueB) {
-            return -1 * direction;
-          }
-          if (valueA > valueB) {
-            return 1 * direction;
-          }
-          return 0;
-        });
-      }
+      paginationManager?.setNumPages(res.data.pagination?.num_pages || 1);
 
       return {
         ...res.data,
@@ -190,12 +172,8 @@ export default function useApiTokens({
     isLoading: listTokensQuery.isLoading,
     create: createTokenMutation,
     revoke: revokeMutation,
-
-    // Added from context
     filters,
     setFilters,
-    paginationState,
-    setPagination,
   };
 }
 

@@ -51,17 +51,28 @@ export function PaginationProvider({
   const [pageSize, setPageSize] = React.useState(initialPageSize);
   const [numPages, setNumPages] = React.useState(1);
 
+  const handlePageSizeChange = React.useCallback(
+    (newPageSize: number) => {
+      setPageSize(newPageSize);
+      // Calculate the new number of pages based on the new page size
+      const newNumPages = Math.ceil((currentPage * pageSize) / newPageSize);
+      // Ensure current page is valid
+      setCurrentPage(Math.min(currentPage, newNumPages));
+    },
+    [currentPage, pageSize],
+  );
+
   const value = React.useMemo(
     () => ({
       currentPage,
       pageSize,
       numPages,
       setCurrentPage,
-      setPageSize,
+      setPageSize: handlePageSizeChange,
       setNumPages,
       pageSizeOptions,
     }),
-    [currentPage, pageSize, numPages, pageSizeOptions],
+    [currentPage, pageSize, numPages, pageSizeOptions, handlePageSizeChange],
   );
 
   return (

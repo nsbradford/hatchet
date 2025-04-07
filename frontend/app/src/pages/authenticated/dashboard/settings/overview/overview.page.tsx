@@ -18,6 +18,8 @@ import {
 } from '@/lib/api/generated/data-contracts';
 import { UpdateTenantForm } from './components/update-tenant-form';
 import { Lock } from 'lucide-react';
+import BasicLayout from '@/components/layouts/basic.layout';
+import { Headline, PageTitle } from '@/components/ui/page-header';
 
 export default function SettingsOverviewPage() {
   const { tenant } = useTenant();
@@ -31,22 +33,19 @@ export default function SettingsOverviewPage() {
   }
 
   return (
-    <div className="flex-grow h-full w-full">
-      <div className="mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-semibold leading-tight text-foreground">
+    <BasicLayout>
+      <Headline>
+        <PageTitle description="Manage your tenant settings">
           General Tenant Settings
-        </h2>
-        <p className="text-gray-700 dark:text-gray-300 my-4">
-          Manage your tenant settings and preferences.
-        </p>
-        <Separator className="my-4" />
-        <UpdateTenant />
-        <Separator className="my-4" />
-        <AnalyticsOptOut />
-        <Separator className="my-4" />
-        <TenantVersionSwitcher />
-      </div>
-    </div>
+        </PageTitle>
+      </Headline>
+      <Separator className="my-4" />
+      <UpdateTenant />
+      <Separator className="my-4" />
+      <AnalyticsOptOut />
+      <Separator className="my-4" />
+      <TenantVersionSwitcher />
+    </BasicLayout>
   );
 }
 

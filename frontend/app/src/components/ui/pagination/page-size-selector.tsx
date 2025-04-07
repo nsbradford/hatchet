@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePagination } from './pagination-context';
+import { usePagination } from '../../../hooks/use-pagination';
 import { PaginationItem } from './pagination-link';
 
 interface PageSizeSelectorProps {

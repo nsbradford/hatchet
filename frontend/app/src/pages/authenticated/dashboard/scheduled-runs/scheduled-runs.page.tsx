@@ -1,54 +1,53 @@
 import { useState } from 'react';
-import { ScheduledWorkflows } from '@/lib/api';
-import { ScheduledRunsHeader } from './components/scheduled-runs-header';
 import { ScheduledRunsTable } from './components/scheduled-runs-table';
-import { EditScheduledRunDialog } from './components/edit-scheduled-run-dialog';
 import useCan from '@/hooks/use-can';
 import { scheduledRuns } from '@/lib/can/features/scheduled-runs.permissions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Lock } from 'lucide-react';
+import { Lock, Plus } from 'lucide-react';
 import { PaginationProvider } from '@/components/ui/pagination';
+import {
+  Headline,
+  HeadlineActionItem,
+  HeadlineActions,
+  PageTitle,
+} from '@/components/ui/page-header';
+import { DocsButton } from '@/components/ui/docs-button';
+import docs from '@/docs-meta-data';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import BasicLayout from '@/components/layouts/basic.layout';
 
 export default function ScheduledRunsPage() {
   const { canWithReason } = useCan();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newScheduledRun, setNewScheduledRun] = useState({
-    name: '',
-    workflowId: '',
-    startTime: '',
-    frequency: 'DAILY',
-    timezone: 'UTC',
-  });
-  const [editingRun, setEditingRun] = useState<ScheduledWorkflows | null>(null);
 
   const { allowed: canManage, message: canManageMessage } = canWithReason(
     scheduledRuns.manage(),
   );
 
-  // Handle create new scheduled run
-  const handleCreateScheduledRun = async () => {
-    // Handle create if needed
-    setIsCreateDialogOpen(false);
-    setNewScheduledRun({
-      name: '',
-      workflowId: '',
-      startTime: '',
-      frequency: 'DAILY',
-      timezone: 'UTC',
-    });
-  };
-
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <ScheduledRunsHeader
-        isCreateDialogOpen={isCreateDialogOpen}
-        onCreateDialogOpenChange={setIsCreateDialogOpen}
-        onCreateScheduledRun={handleCreateScheduledRun}
-        newScheduledRun={newScheduledRun}
-        onNewScheduledRunChange={(field, value) =>
-          setNewScheduledRun({ ...newScheduledRun, [field]: value })
-        }
-      />
+    <BasicLayout>
+      <Headline>
+        <PageTitle description="Run tasks at a specific date and time">
+          Scheduled Runs
+        </PageTitle>
+        <HeadlineActions>
+          <HeadlineActionItem>
+            <DocsButton doc={docs.home['scheduled-runs']} size="icon" />
+          </HeadlineActionItem>
+          {canManage && (
+            <HeadlineActionItem>
+              <Button
+                className="w-full md:w-auto"
+                onClick={() => setIsCreateDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Schedule New Run
+              </Button>
+            </HeadlineActionItem>
+          )}
+        </HeadlineActions>
+      </Headline>
       {canManageMessage && (
         <Alert variant="warning">
           <Lock className="w-4 h-4 mr-2" />
@@ -56,9 +55,10 @@ export default function ScheduledRunsPage() {
           <AlertDescription>{canManageMessage}</AlertDescription>
         </Alert>
       )}
-
       {canManage && (
         <>
+          <Separator className="my-4" />
+
           <PaginationProvider
             initialPage={1}
             initialPageSize={5}
@@ -68,17 +68,8 @@ export default function ScheduledRunsPage() {
               onCreateClicked={() => setIsCreateDialogOpen(true)}
             />
           </PaginationProvider>
-
-          <EditScheduledRunDialog
-            editingRun={editingRun}
-            onClose={() => setEditingRun(null)}
-            onSave={async (run) => {
-              // Handle save if needed
-              setEditingRun(null);
-            }}
-          />
         </>
       )}
-    </div>
+    </BasicLayout>
   );
 }

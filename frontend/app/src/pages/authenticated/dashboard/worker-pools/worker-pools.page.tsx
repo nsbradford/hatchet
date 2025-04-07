@@ -46,6 +46,16 @@ import {
 } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { SlotsBadge } from './components/slots-badge';
+import BasicLayout from '@/components/layouts/basic.layout';
+import { DocsButton } from '@/components/ui/docs-button';
+import {
+  Headline,
+  PageTitle,
+  HeadlineActions,
+  HeadlineActionItem,
+} from '@/components/ui/page-header';
+import docs from '@/docs-meta-data';
+import { Separator } from '@/components/ui/separator';
 
 // Status badge component to reduce repetition
 const StatusBadge = ({
@@ -310,9 +320,6 @@ export default function WorkerPoolsPage() {
     isLoading,
     filters,
     setFilters,
-    paginationState,
-    setPagination,
-    pagination,
   } = useWorkers({
     refetchInterval: 5000,
   });
@@ -359,23 +366,6 @@ export default function WorkerPoolsPage() {
     });
   };
 
-  // Pagination handlers
-  const handleNextPage = () => {
-    setPagination({
-      ...paginationState,
-      currentPage: paginationState.currentPage + 1,
-    });
-  };
-
-  const handlePreviousPage = () => {
-    if (paginationState.currentPage > 1) {
-      setPagination({
-        ...paginationState,
-        currentPage: paginationState.currentPage - 1,
-      });
-    }
-  };
-
   const renderTableContent = () => {
     if (isLoading) {
       return Array(5)
@@ -397,7 +387,19 @@ export default function WorkerPoolsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+    <BasicLayout>
+      <Headline>
+        <PageTitle description="Manage your worker pools">
+          Worker Pools
+        </PageTitle>
+        <HeadlineActions>
+          <HeadlineActionItem>
+            <DocsButton doc={docs.home.workers} size="icon" />
+          </HeadlineActionItem>
+        </HeadlineActions>
+      </Headline>
+      <Separator className="my-4" />
+
       <div className="mb-6">
         <div className="flex gap-4 mb-6">
           <Select
@@ -430,36 +432,8 @@ export default function WorkerPoolsPage() {
             <TableBody>{renderTableContent()}</TableBody>
           </Table>
         </div>
-
-        {/* Pagination Controls */}
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePreviousPage}
-            disabled={paginationState.currentPage <= 1 || isLoading}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNextPage}
-            disabled={
-              !pagination ||
-              paginationState.currentPage >= (pagination?.num_pages || 0) ||
-              isLoading
-            }
-          >
-            Next
-          </Button>
-          <div className="text-sm text-muted-foreground">
-            Page {paginationState.currentPage} of {pagination?.num_pages || 1}
-          </div>
-        </div>
-
         {showCloudCard && <HatchetCloudCard onDismiss={handleDismissCard} />}
       </div>
-    </div>
+    </BasicLayout>
   );
 }

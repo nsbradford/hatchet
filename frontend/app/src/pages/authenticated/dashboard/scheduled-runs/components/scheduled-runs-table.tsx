@@ -19,7 +19,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
 import { MoreHorizontal, RefreshCw, Trash2, Clock, Plus } from 'lucide-react';
 import { ScheduledWorkflows, WorkflowRunStatus } from '@/lib/api';
 import {
@@ -162,7 +161,6 @@ export function ScheduledRunsTable({
 
   return (
     <>
-      <Separator className="my-6" />
       <div className="rounded-md border">
         <Table>
           <TableHeader>
