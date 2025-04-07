@@ -17,6 +17,7 @@ import {
   PropsWithChildren,
   createElement,
 } from 'react';
+import { PaginationManager, PaginationManagerNoOp } from './use-pagination';
 
 // Types for filters and pagination
 interface CronsFilters {
@@ -25,11 +26,6 @@ interface CronsFilters {
   sortDirection?: 'asc' | 'desc';
   fromDate?: string;
   toDate?: string;
-}
-
-interface CronsPagination {
-  currentPage: number;
-  pageSize: number;
 }
 
 // Update cron params
@@ -57,27 +53,23 @@ interface CronsState {
   // Added from context
   filters: CronsFilters;
   setFilters: (filters: CronsFilters) => void;
-  paginationState: CronsPagination;
-  setPagination: (pagination: CronsPagination) => void;
 }
 
 interface UseCronsOptions {
   refetchInterval?: number;
   initialFilters?: CronsFilters;
-  initialPagination?: CronsPagination;
+  paginationManager?: PaginationManager;
 }
 
 export default function useCrons({
   refetchInterval,
   initialFilters = {},
-  initialPagination = { currentPage: 1, pageSize: 10 },
+  paginationManager = PaginationManagerNoOp,
 }: UseCronsOptions = {}): CronsState {
   const { tenant } = useTenant();
 
   // State from the former context
   const [filters, setFilters] = useState<CronsFilters>(initialFilters);
-  const [paginationState, setPagination] =
-    useState<CronsPagination>(initialPagination);
 
   const listCronsQuery = useQuery({
     queryKey: [
@@ -88,19 +80,22 @@ export default function useCrons({
       filters.sortDirection,
       filters.fromDate,
       filters.toDate,
-      paginationState.currentPage,
-      paginationState.pageSize,
+      paginationManager.currentPage,
+      paginationManager.pageSize,
     ],
     queryFn: async () => {
       if (!tenant) {
+        paginationManager?.setNumPages(1);
         return { rows: [], pagination: { current_page: 0, num_pages: 0 } };
       }
 
-      // Build query params
       const queryParams: Record<string, any> = {
-        page: paginationState.currentPage,
-        limit: paginationState.pageSize,
+        limit: paginationManager.pageSize,
+        offset:
+          (paginationManager.currentPage - 1) * paginationManager.pageSize,
       };
+
+      console.log(queryParams);
 
       if (filters.sortBy) {
         queryParams.orderBy = filters.sortBy as CronWorkflowsOrderByField;
@@ -139,6 +134,8 @@ export default function useCrons({
           return createdAt <= toDate;
         });
       }
+
+      paginationManager.setNumPages(res.data.pagination?.num_pages || 1);
 
       return {
         ...res.data,
@@ -219,8 +216,6 @@ export default function useCrons({
     // Added from context
     filters,
     setFilters,
-    paginationState,
-    setPagination,
   };
 }
 

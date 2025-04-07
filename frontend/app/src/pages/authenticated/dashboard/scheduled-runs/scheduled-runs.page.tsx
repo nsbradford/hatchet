@@ -59,11 +59,7 @@ export default function ScheduledRunsPage() {
         <>
           <Separator className="my-4" />
 
-          <PaginationProvider
-            initialPage={1}
-            initialPageSize={5}
-            pageSizeOptions={[5, 10, 20, 50]}
-          >
+          <PaginationProvider>
             <ScheduledRunsTable
               onCreateClicked={() => setIsCreateDialogOpen(true)}
             />
