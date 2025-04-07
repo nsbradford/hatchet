@@ -47,6 +47,7 @@ export default function WorkerDetailPage() {
     update,
   } = useWorkers({
     initialPagination: { currentPage: 1, pageSize: 100 },
+    refetchInterval: 5000, // Ensure real-time updates
   });
 
   // Find the specific worker
@@ -93,7 +94,9 @@ export default function WorkerDetailPage() {
     try {
       await update.mutateAsync({
         workerId: worker.metadata.id,
-        data: { isPaused: true }, // Using isPaused for now
+        // In a real implementation, we might use a different API call to terminate the worker
+        // For now, we're just using isPaused as that's what's supported by the API
+        data: { isPaused: true },
       });
     } catch (error) {
       console.error('Failed to stop worker:', error);

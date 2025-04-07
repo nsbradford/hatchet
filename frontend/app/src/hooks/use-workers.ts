@@ -34,12 +34,20 @@ interface UpdateWorkerParams {
   data: UpdateWorkerRequest;
 }
 
+// Bulk update workers params
+interface BulkUpdateWorkersParams {
+  workerIds: string[];
+  data: UpdateWorkerRequest;
+  poolName?: string; // Optional parameter to update all workers in a pool
+}
+
 // Main hook return type
 interface WorkersState {
   data?: WorkerList['rows'];
   pagination?: WorkerList['pagination'];
   isLoading: boolean;
   update: UseMutationResult<Worker, Error, UpdateWorkerParams, unknown>;
+  bulkUpdate: UseMutationResult<void, Error, BulkUpdateWorkersParams, unknown>;
 
   // Added from context
   filters: WorkersFilters;
@@ -189,11 +197,43 @@ export default function useWorkers({
     },
   });
 
+  // Bulk update mutation
+  const bulkUpdateWorkersMutation = useMutation({
+    mutationKey: ['worker:bulkUpdate', tenant],
+    mutationFn: async ({
+      workerIds,
+      data,
+      poolName,
+    }: BulkUpdateWorkersParams) => {
+      if (!tenant) {
+        throw new Error('Tenant not found');
+      }
+
+      // If pool name is provided, get all worker IDs for that pool
+      let targetWorkerIds = workerIds;
+      if (poolName && !workerIds.length) {
+        const workers = listWorkersQuery.data?.rows || [];
+        targetWorkerIds = workers
+          .filter((worker: Worker) => worker.name === poolName)
+          .map((worker: Worker) => worker.metadata.id);
+      }
+
+      // Execute all updates in parallel
+      await Promise.all(
+        targetWorkerIds.map((workerId) => api.workerUpdate(workerId, data)),
+      );
+    },
+    onSuccess: () => {
+      listWorkersQuery.refetch();
+    },
+  });
+
   return {
     data: listWorkersQuery.data?.rows || [],
     pagination: listWorkersQuery.data?.pagination,
     isLoading: listWorkersQuery.isLoading,
     update: updateWorkerMutation,
+    bulkUpdate: bulkUpdateWorkersMutation,
 
     // Added from context
     filters,
