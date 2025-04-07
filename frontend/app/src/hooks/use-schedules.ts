@@ -21,7 +21,7 @@ import {
 import {
   PaginationManagerNoOp,
   PaginationManager,
-} from '@/components/ui/pagination/pagination';
+} from '@/components/ui/pagination';
 
 // Types for filters and pagination
 interface SchedulesFilters {
@@ -32,11 +32,6 @@ interface SchedulesFilters {
   toDate?: string;
   statuses?: ScheduledRunStatus[];
   workflowId?: string;
-}
-
-interface SchedulesPagination {
-  currentPage: number;
-  pageSize: number;
 }
 
 // Update schedule params

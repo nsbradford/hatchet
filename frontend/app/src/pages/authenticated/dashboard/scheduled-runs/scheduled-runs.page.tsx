@@ -7,7 +7,7 @@ import useCan from '@/hooks/use-can';
 import { scheduledRuns } from '@/lib/can/features/scheduled-runs.permissions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Lock } from 'lucide-react';
-import { PaginationProvider } from '@/components/ui/pagination/pagination';
+import { PaginationProvider } from '@/components/ui/pagination';
 
 export default function ScheduledRunsPage() {
   const { canWithReason } = useCan();
@@ -59,7 +59,11 @@ export default function ScheduledRunsPage() {
 
       {canManage && (
         <>
-          <PaginationProvider initialPage={1} initialPageSize={5}>
+          <PaginationProvider
+            initialPage={1}
+            initialPageSize={5}
+            pageSizeOptions={[5, 10, 20, 50]}
+          >
             <ScheduledRunsTable
               onCreateClicked={() => setIsCreateDialogOpen(true)}
             />

@@ -31,9 +31,11 @@ import {
 import { useState } from 'react';
 import { DestructiveDialog } from '@/components/ui/dialog/destructive-dialog';
 import {
+  PageSelector,
+  PageSizeSelector,
   Pagination,
   usePagination,
-} from '@/components/ui/pagination/pagination';
+} from '@/components/ui/pagination';
 import useSchedules from '@/hooks/use-schedules';
 
 interface ScheduledRunsTableProps {
@@ -255,7 +257,10 @@ export function ScheduledRunsTable({
             )}
           </TableBody>
         </Table>
-        <Pagination />
+        <Pagination>
+          <PageSelector />
+          <PageSizeSelector />
+        </Pagination>
       </div>
 
       <DestructiveDialog
