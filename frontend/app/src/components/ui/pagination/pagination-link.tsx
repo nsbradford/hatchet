@@ -1,30 +1,23 @@
 import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ButtonProps } from '@/components/ui/button';
+import { ButtonProps, buttonVariants } from '@/components/ui/button';
 import { cva } from 'class-variance-authority';
 
 const paginationVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+  'cursor-pointer flex items-center justify-center',
   {
     variants: {
       variant: {
-        default: 'hover:bg-accent hover:text-accent-foreground',
-        active:
-          'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground',
-        previous: 'gap-1 pl-2.5',
-        next: 'gap-1 pr-2.5',
-      },
-      size: {
-        default: 'h-9 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-10 rounded-md px-8',
-        icon: 'h-9 w-9',
+        default: '',
+        active: 'border border-input bg-background shadow-sm',
+        previous: '',
+        next: '',
+        content: 'w-auto min-w-[2.5rem]',
       },
     },
     defaultVariants: {
       variant: 'default',
-      size: 'icon',
     },
   },
 );
@@ -32,7 +25,7 @@ const paginationVariants = cva(
 type PaginationLinkProps = {
   isActive?: boolean;
   disabled?: boolean;
-  variant?: 'default' | 'active' | 'previous' | 'next';
+  variant?: 'default' | 'active' | 'previous' | 'next' | 'content';
 } & Pick<ButtonProps, 'size'> &
   React.ComponentProps<'a'>;
 
@@ -45,11 +38,24 @@ const PaginationLink = React.forwardRef<HTMLAnchorElement, PaginationLinkProps>(
       variant = 'default',
       size = 'icon',
       children,
+      onClick,
       ...props
     },
     ref,
   ) => {
     const computedVariant = isActive ? 'active' : variant;
+    const buttonVariant = isActive ? 'outline' : 'ghost';
+
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (disabled) {
+        e.preventDefault();
+        return;
+      }
+      if (onClick) {
+        e.preventDefault();
+        onClick(e);
+      }
+    };
 
     return (
       <a
@@ -57,15 +63,16 @@ const PaginationLink = React.forwardRef<HTMLAnchorElement, PaginationLinkProps>(
         aria-current={isActive ? 'page' : undefined}
         aria-disabled={disabled}
         className={cn(
-          paginationVariants({ variant: computedVariant, size }),
+          buttonVariants({ variant: buttonVariant, size }),
+          paginationVariants({ variant: computedVariant }),
           disabled && 'pointer-events-none opacity-50',
+          'select-none',
           className,
         )}
+        onClick={handleClick}
         {...props}
       >
-        {variant === 'previous' && <ChevronLeft className="h-4 w-4" />}
         {children}
-        {variant === 'next' && <ChevronRight className="h-4 w-4" />}
       </a>
     );
   },
@@ -80,10 +87,12 @@ const PaginationPrevious = React.forwardRef<
   <PaginationLink
     ref={ref}
     variant="previous"
+    size="icon"
     aria-label="Go to previous page"
     {...props}
   >
-    <span>Previous</span>
+    <ChevronLeft className="h-4 w-4" />
+    <span className="sr-only">Previous</span>
   </PaginationLink>
 ));
 PaginationPrevious.displayName = 'PaginationPrevious';
@@ -94,10 +103,12 @@ const PaginationNext = React.forwardRef<HTMLAnchorElement, PaginationLinkProps>(
     <PaginationLink
       ref={ref}
       variant="next"
+      size="icon"
       aria-label="Go to next page"
       {...props}
     >
-      <span>Next</span>
+      <span className="sr-only">Next</span>
+      <ChevronRight className="h-4 w-4" />
     </PaginationLink>
   ),
 );

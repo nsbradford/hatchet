@@ -5,32 +5,45 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePagination } from './pagination-context';
 import { PaginationItem } from './pagination-link';
 
 interface PageSizeSelectorProps {
   options?: number[];
+  className?: string;
 }
 
-export function PageSizeSelector({ options }: PageSizeSelectorProps) {
+export function PageSizeSelector({
+  options,
+  className,
+}: PageSizeSelectorProps) {
   const { pageSize, setPageSize, pageSizeOptions } = usePagination();
   const availableOptions = options || pageSizeOptions || [10, 50, 100, 500];
 
   return (
-    <PaginationItem>
+    <PaginationItem className={className}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="ml-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-[110px] flex items-center justify-between"
+          >
             {pageSize} per page
+            <ChevronDown className="h-4 w-4 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-[110px]">
           {availableOptions.map((size) => (
             <DropdownMenuItem
               key={size}
               onClick={() => setPageSize(size)}
-              className={cn(size === pageSize && 'bg-accent')}
+              className={cn(
+                'flex items-center justify-between',
+                size === pageSize && 'bg-accent',
+              )}
             >
               {size} per page
             </DropdownMenuItem>

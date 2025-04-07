@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { cn } from '@/lib/utils';
 import { PaginationContent } from './pagination-content';
-import { PageSelector } from './page-selector';
 import { PageSizeSelector } from './page-size-selector';
+import { PageSelector } from './page-selector';
+import { cn } from '@/lib/utils';
 
 interface PaginationProps extends React.ComponentProps<'nav'> {
   children?: React.ReactNode;
@@ -13,14 +13,14 @@ const Pagination = ({ className, children, ...props }: PaginationProps) => {
     <nav
       role="navigation"
       aria-label="pagination"
-      className={cn('mx-auto flex w-full justify-center', className)}
+      className={'mx-auto flex w-full justify-center'}
       {...props}
     >
-      <PaginationContent>
+      <PaginationContent className={cn('w-full justify-between', className)}>
         {children || (
           <>
-            <PageSelector />
             <PageSizeSelector />
+            <PageSelector />
           </>
         )}
       </PaginationContent>
