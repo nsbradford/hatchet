@@ -30,33 +30,42 @@ import {
 } from '@/components/ui/tooltip';
 import { useState } from 'react';
 import { DestructiveDialog } from '@/components/ui/dialog/destructive-dialog';
+import {
+  Pagination,
+  usePagination,
+} from '@/components/ui/pagination/pagination';
+import useSchedules from '@/hooks/use-schedules';
 
 interface ScheduledRunsTableProps {
-  scheduledRuns: ScheduledWorkflows[];
-  isLoading: boolean;
-  onDelete: (id: string) => void;
-  onViewDetails: (run: ScheduledWorkflows) => void;
+  onCreateClicked: () => void;
 }
 
 export function ScheduledRunsTable({
-  scheduledRuns,
-  isLoading,
-  onDelete,
-  onViewDetails,
+  onCreateClicked,
 }: ScheduledRunsTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRun, setSelectedRun] = useState<ScheduledWorkflows | null>(
     null,
   );
+  const pagination = usePagination();
+
+  const {
+    data: scheduledRunsData = [],
+    isLoading,
+    delete: deleteSchedule,
+  } = useSchedules({
+    refetchInterval: 5000,
+    paginationManager: pagination,
+  });
 
   const handleDeleteClick = (run: ScheduledWorkflows) => {
     setSelectedRun(run);
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (selectedRun) {
-      onDelete(selectedRun.metadata.id);
+      await deleteSchedule.mutateAsync(selectedRun.metadata.id);
       setDeleteDialogOpen(false);
       setSelectedRun(null);
     }
@@ -164,7 +173,7 @@ export function ScheduledRunsTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {scheduledRuns.length === 0 ? (
+            {scheduledRunsData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24">
                   <div className="flex flex-col items-center justify-center gap-4 py-8">
@@ -173,9 +182,7 @@ export function ScheduledRunsTable({
                       Create a new scheduled run to get started.
                     </p>
                     {
-                      <Button
-                        onClick={() => onViewDetails({} as ScheduledWorkflows)}
-                      >
+                      <Button onClick={onCreateClicked}>
                         <Plus className="h-4 w-4 mr-2" />
                         Create Scheduled Run
                       </Button>
@@ -185,12 +192,8 @@ export function ScheduledRunsTable({
                 </TableCell>
               </TableRow>
             ) : (
-              scheduledRuns.map((run) => (
-                <TableRow
-                  key={run.metadata.id}
-                  onClick={() => onViewDetails(run)}
-                  className="cursor-pointer"
-                >
+              scheduledRunsData.map((run) => (
+                <TableRow key={run.metadata.id} className="cursor-pointer">
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{run.workflowName}</span>
@@ -252,6 +255,7 @@ export function ScheduledRunsTable({
             )}
           </TableBody>
         </Table>
+        <Pagination />
       </div>
 
       <DestructiveDialog

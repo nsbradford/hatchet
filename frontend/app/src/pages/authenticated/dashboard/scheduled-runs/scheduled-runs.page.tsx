@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ScheduledWorkflows } from '@/lib/api';
-import useSchedules from '@/hooks/use-schedules';
 import { ScheduledRunsHeader } from './components/scheduled-runs-header';
 import { ScheduledRunsTable } from './components/scheduled-runs-table';
 import { EditScheduledRunDialog } from './components/edit-scheduled-run-dialog';
@@ -8,6 +7,7 @@ import useCan from '@/hooks/use-can';
 import { scheduledRuns } from '@/lib/can/features/scheduled-runs.permissions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Lock } from 'lucide-react';
+import { PaginationProvider } from '@/components/ui/pagination/pagination';
 
 export default function ScheduledRunsPage() {
   const { canWithReason } = useCan();
@@ -21,46 +21,13 @@ export default function ScheduledRunsPage() {
   });
   const [editingRun, setEditingRun] = useState<ScheduledWorkflows | null>(null);
 
-  const [paginationState, setPaginationState] = useState({
-    currentPage: 1,
-    pageSize: 10,
-  });
-
-  const {
-    data: scheduledRunsData = [],
-    isLoading,
-    update,
-    create,
-    delete: deleteSchedule,
-    filters,
-    setFilters,
-    pagination,
-    setPagination,
-  } = useSchedules({
-    refetchInterval: 5000,
-    initialPagination: paginationState,
-  });
-
   const { allowed: canManage, message: canManageMessage } = canWithReason(
     scheduledRuns.manage(),
   );
 
-  // Delete scheduled run
-  const deleteScheduledRun = async (id: string) => {
-    await deleteSchedule.mutateAsync(id);
-  };
-
   // Handle create new scheduled run
   const handleCreateScheduledRun = async () => {
-    await create.mutateAsync({
-      workflowName: newScheduledRun.workflowId,
-      data: {
-        input: {},
-        additionalMetadata: {},
-        triggerAt: newScheduledRun.startTime,
-      },
-    });
-
+    // Handle create if needed
     setIsCreateDialogOpen(false);
     setNewScheduledRun({
       name: '',
@@ -92,26 +59,17 @@ export default function ScheduledRunsPage() {
 
       {canManage && (
         <>
-          <ScheduledRunsTable
-            scheduledRuns={scheduledRunsData}
-            isLoading={isLoading}
-            onDelete={deleteScheduledRun}
-            onViewDetails={() => {}}
-          />
+          <PaginationProvider initialPage={1} initialPageSize={5}>
+            <ScheduledRunsTable
+              onCreateClicked={() => setIsCreateDialogOpen(true)}
+            />
+          </PaginationProvider>
 
           <EditScheduledRunDialog
             editingRun={editingRun}
             onClose={() => setEditingRun(null)}
             onSave={async (run) => {
-              await update.mutateAsync({
-                scheduleId: run.metadata.id,
-                workflowId: run.workflowId,
-                data: {
-                  input: run.input || {},
-                  additionalMetadata: run.additionalMetadata || {},
-                  triggerAt: run.triggerAt,
-                },
-              });
+              // Handle save if needed
               setEditingRun(null);
             }}
           />

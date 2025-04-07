@@ -18,6 +18,10 @@ import {
   PropsWithChildren,
   createElement,
 } from 'react';
+import {
+  PaginationManagerNoOp,
+  PaginationManager,
+} from '@/components/ui/pagination/pagination';
 
 // Types for filters and pagination
 interface SchedulesFilters {
@@ -51,7 +55,7 @@ interface CreateScheduleParams {
 // Main hook return type
 interface SchedulesState {
   data?: ScheduledWorkflowsList['rows'];
-  pagination?: ScheduledWorkflowsList['pagination'];
+  paginationResponse?: ScheduledWorkflowsList['pagination'];
   isLoading: boolean;
   update: UseMutationResult<
     ScheduledWorkflows,
@@ -67,30 +71,26 @@ interface SchedulesState {
   >;
   delete: UseMutationResult<void, Error, string, unknown>;
 
-  // Added from context
+  // Filters state
   filters: SchedulesFilters;
   setFilters: (filters: SchedulesFilters) => void;
-  paginationState: SchedulesPagination;
-  setPagination: (pagination: SchedulesPagination) => void;
 }
 
 interface UseSchedulesOptions {
   refetchInterval?: number;
   initialFilters?: SchedulesFilters;
-  initialPagination?: SchedulesPagination;
+  paginationManager?: PaginationManager;
 }
 
 export default function useSchedules({
   refetchInterval,
   initialFilters = {},
-  initialPagination = { currentPage: 1, pageSize: 10 },
+  paginationManager = PaginationManagerNoOp,
 }: UseSchedulesOptions = {}): SchedulesState {
   const { tenant } = useTenant();
 
-  // State from the former context
+  // State for filters only
   const [filters, setFilters] = useState<SchedulesFilters>(initialFilters);
-  const [paginationState, setPagination] =
-    useState<SchedulesPagination>(initialPagination);
 
   const listSchedulesQuery = useQuery({
     queryKey: [
@@ -103,18 +103,25 @@ export default function useSchedules({
       filters.toDate,
       filters.statuses,
       filters.workflowId,
-      paginationState.currentPage,
-      paginationState.pageSize,
+      paginationManager?.currentPage,
+      paginationManager?.pageSize,
     ],
     queryFn: async () => {
       if (!tenant) {
-        return { rows: [], pagination: { current_page: 0, num_pages: 0 } };
+        const pagination = {
+          rows: [],
+          pagination: { current_page: 0, num_pages: 0 },
+        };
+        paginationManager?.setNumPages(pagination.pagination.num_pages);
+        return pagination;
       }
 
       // Build query params
       const queryParams: Record<string, any> = {
-        limit: paginationState.pageSize,
-        offset: (paginationState.currentPage - 1) * paginationState.pageSize,
+        limit: paginationManager?.pageSize || 10,
+        offset:
+          (paginationManager?.currentPage - 1) * paginationManager?.pageSize ||
+          0,
       };
 
       if (filters.sortBy) {
@@ -161,6 +168,8 @@ export default function useSchedules({
           return createdAt <= toDate;
         });
       }
+
+      paginationManager?.setNumPages(res.data.pagination?.num_pages || 1);
 
       return {
         ...res.data,
@@ -237,17 +246,13 @@ export default function useSchedules({
 
   return {
     data: listSchedulesQuery.data?.rows || [],
-    pagination: listSchedulesQuery.data?.pagination,
+    paginationResponse: listSchedulesQuery.data?.pagination,
     isLoading: listSchedulesQuery.isLoading,
     update: updateScheduleMutation,
     create: createScheduleMutation,
     delete: deleteScheduleMutation,
-
-    // Added from context
     filters,
     setFilters,
-    paginationState,
-    setPagination,
   };
 }
 
