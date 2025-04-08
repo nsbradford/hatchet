@@ -147,6 +147,12 @@ func (t *V1WorkflowRunsService) WithDags(ctx echo.Context, request gen.V1Workflo
 		}
 	}
 
+	taskIdToActionId := make(map[int64]string)
+
+	for _, task := range tasks {
+		taskIdToActionId[task.ID] = task.ActionID
+	}
+
 	parsedTasks := transformers.TaskRunDataRowToWorkflowRunsMany(tasks, taskIdToWorkflowName, total, limit, offset)
 
 	dagChildren := make(map[uuid.UUID][]gen.V1TaskSummary)
@@ -162,7 +168,7 @@ func (t *V1WorkflowRunsService) WithDags(ctx echo.Context, request gen.V1Workflo
 		}
 	}
 
-	result := transformers.ToWorkflowRunMany(dags, dagChildren, workflowNames, total, limit, offset)
+	result := transformers.ToWorkflowRunMany(dags, dagChildren, taskIdToActionId, workflowNames, total, limit, offset)
 
 	// Search for api errors to see how we handle errors in other cases
 	return gen.V1WorkflowRunList200JSONResponse(
