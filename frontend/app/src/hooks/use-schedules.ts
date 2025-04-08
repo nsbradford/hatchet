@@ -4,6 +4,7 @@ import api, {
   ScheduleWorkflowRunRequest,
   ScheduledRunStatus,
   ScheduledWorkflowsOrderByField,
+  WorkflowRunOrderByDirection,
 } from '@/lib/api';
 import {
   useMutation,
@@ -12,7 +13,6 @@ import {
 } from '@tanstack/react-query';
 import useTenant from './use-tenant';
 import {
-  useState,
   createContext,
   useContext,
   PropsWithChildren,
@@ -24,14 +24,17 @@ import {
 } from '@/components/ui/pagination';
 
 // Types for filters and pagination
-interface SchedulesFilters {
-  search?: string;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  fromDate?: string;
-  toDate?: string;
+export interface SchedulesFilters {
   statuses?: ScheduledRunStatus[];
   workflowId?: string;
+  parentWorkflowRunId?: string;
+  parentStepRunId?: string;
+  additionalMetadata?: string[];
+}
+
+export interface SchedulesSort {
+  sortBy?: ScheduledWorkflowsOrderByField;
+  sortDirection?: WorkflowRunOrderByDirection;
 }
 
 // Update schedule params
@@ -68,69 +71,48 @@ interface SchedulesState {
 
   // Filters state
   filters: SchedulesFilters;
-  setFilters: (filters: SchedulesFilters) => void;
 }
 
 interface UseSchedulesOptions {
   refetchInterval?: number;
-  initialFilters?: SchedulesFilters;
+  filters?: SchedulesFilters;
+  sort?: SchedulesSort;
   paginationManager?: PaginationManager;
 }
 
 export default function useSchedules({
   refetchInterval,
-  initialFilters = {},
-  paginationManager = PaginationManagerNoOp,
+  filters = {},
+  sort = {},
+  paginationManager: pagination = PaginationManagerNoOp,
 }: UseSchedulesOptions = {}): SchedulesState {
   const { tenant } = useTenant();
 
   // State for filters only
-  const [filters, setFilters] = useState<SchedulesFilters>(initialFilters);
 
   const listSchedulesQuery = useQuery({
-    queryKey: [
-      'schedule:list',
-      tenant,
-      filters.search,
-      filters.sortBy,
-      filters.sortDirection,
-      filters.fromDate,
-      filters.toDate,
-      filters.statuses,
-      filters.workflowId,
-      paginationManager?.currentPage,
-      paginationManager?.pageSize,
-    ],
+    queryKey: ['schedule:list', tenant, filters, sort, pagination],
     queryFn: async () => {
       if (!tenant) {
-        const pagination = {
+        const p = {
           rows: [],
           pagination: { current_page: 0, num_pages: 0 },
         };
-        paginationManager?.setNumPages(pagination.pagination.num_pages);
-        return pagination;
+        pagination?.setNumPages(p.pagination.num_pages);
+        return p;
       }
 
       // Build query params
-      const queryParams: Record<string, any> = {
-        limit: paginationManager?.pageSize || 10,
-        offset:
-          (paginationManager?.currentPage - 1) * paginationManager?.pageSize ||
-          0,
+      const queryParams: Parameters<typeof api.workflowScheduledList>[1] = {
+        limit: pagination?.pageSize || 10,
+        offset: (pagination?.currentPage - 1) * pagination?.pageSize || 0,
+        ...filters,
       };
 
-      if (filters.sortBy) {
-        queryParams.orderByField =
-          filters.sortBy as ScheduledWorkflowsOrderByField;
-        queryParams.orderByDirection = filters.sortDirection || 'asc';
-      }
-
-      if (filters.statuses && filters.statuses.length > 0) {
-        queryParams.statuses = filters.statuses;
-      }
-
-      if (filters.workflowId) {
-        queryParams.workflowId = filters.workflowId;
+      if (sort.sortBy) {
+        queryParams.orderByField = sort.sortBy;
+        queryParams.orderByDirection =
+          sort.sortDirection || WorkflowRunOrderByDirection.ASC;
       }
 
       const res = await api.workflowScheduledList(
@@ -138,38 +120,9 @@ export default function useSchedules({
         queryParams,
       );
 
-      // Client-side filtering for search if API doesn't support it
-      let filteredRows = res.data.rows || [];
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        filteredRows = filteredRows.filter((schedule) =>
-          schedule.workflowName.toLowerCase().includes(searchLower),
-        );
-      }
+      pagination?.setNumPages(res.data.pagination?.num_pages || 1);
 
-      // Client-side date filtering
-      if (filters.fromDate) {
-        const fromDate = new Date(filters.fromDate);
-        filteredRows = filteredRows.filter((schedule) => {
-          const createdAt = new Date(schedule.metadata.createdAt);
-          return createdAt >= fromDate;
-        });
-      }
-
-      if (filters.toDate) {
-        const toDate = new Date(filters.toDate);
-        filteredRows = filteredRows.filter((schedule) => {
-          const createdAt = new Date(schedule.metadata.createdAt);
-          return createdAt <= toDate;
-        });
-      }
-
-      paginationManager?.setNumPages(res.data.pagination?.num_pages || 1);
-
-      return {
-        ...res.data,
-        rows: filteredRows,
-      };
+      return res.data;
     },
     refetchInterval,
   });
@@ -247,7 +200,6 @@ export default function useSchedules({
     create: createScheduleMutation,
     delete: deleteScheduleMutation,
     filters,
-    setFilters,
   };
 }
 

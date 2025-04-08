@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, RefreshCw, Trash2, Clock, Plus } from 'lucide-react';
+import { MoreHorizontal, Trash2, Clock, Plus } from 'lucide-react';
 import { ScheduledWorkflows, WorkflowRunStatus } from '@/lib/api';
 import {
   Tooltip,
@@ -35,7 +35,14 @@ import {
   Pagination,
   usePagination,
 } from '@/components/ui/pagination';
-import useSchedules from '@/hooks/use-schedules';
+import { useFilters } from '@/hooks/use-filters';
+import useSchedules, { SchedulesFilters } from '@/hooks/use-schedules';
+import { ScheduledRunStatus } from '@/lib/api';
+import {
+  FilterGroup,
+  FilterSelect,
+  FilterText,
+} from '@/components/ui/filters/filters';
 
 interface ScheduledRunsTableProps {
   onCreateClicked: () => void;
@@ -48,7 +55,9 @@ export function ScheduledRunsTable({
   const [selectedRun, setSelectedRun] = useState<ScheduledWorkflows | null>(
     null,
   );
-  const pagination = usePagination();
+
+  const paginationManager = usePagination();
+  const { filters } = useFilters<SchedulesFilters>();
 
   const {
     data: scheduledRunsData = [],
@@ -56,7 +65,8 @@ export function ScheduledRunsTable({
     delete: deleteSchedule,
   } = useSchedules({
     refetchInterval: 5000,
-    paginationManager: pagination,
+    paginationManager,
+    filters,
   });
 
   const handleDeleteClick = (run: ScheduledWorkflows) => {
@@ -151,114 +161,138 @@ export function ScheduledRunsTable({
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Trigger At</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead className="text-right"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {scheduledRunsData.length === 0 ? (
+      <div className="flex flex-col gap-4">
+        <FilterGroup>
+          <FilterText<SchedulesFilters>
+            name="workflowId"
+            placeholder="Search by workflow name..."
+          />
+          <FilterSelect<SchedulesFilters, ScheduledRunStatus[]>
+            name="statuses"
+            value={filters.statuses}
+            placeholder="Status"
+            multi
+            only
+            options={[
+              {
+                label: 'Scheduled',
+                value: ScheduledRunStatus.SCHEDULED,
+              },
+              { label: 'Succeeded', value: ScheduledRunStatus.SUCCEEDED },
+              { label: 'Failed', value: ScheduledRunStatus.FAILED },
+              { label: 'Running', value: ScheduledRunStatus.RUNNING },
+              { label: 'Queued', value: ScheduledRunStatus.QUEUED },
+              { label: 'Pending', value: ScheduledRunStatus.PENDING },
+            ]}
+          />
+        </FilterGroup>
+        {JSON.stringify(filters)}
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="h-24">
-                  <div className="flex flex-col items-center justify-center gap-4 py-8">
-                    <p className="text-md">No scheduled runs found.</p>
-                    <p className="text-sm text-muted-foreground">
-                      Create a new scheduled run to get started.
-                    </p>
-                    {
-                      <Button onClick={onCreateClicked}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Scheduled Run
-                      </Button>
-                    }
-                    <DocsButton doc={docs.home['scheduled-runs']} />
-                  </div>
-                </TableCell>
+                <TableHead>Name</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Trigger At</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead className="text-right"></TableHead>
               </TableRow>
-            ) : (
-              scheduledRunsData.map((run) => (
-                <TableRow key={run.metadata.id} className="cursor-pointer">
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{run.workflowName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{getStatusBadge(run.workflowRunStatus)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Time date={run.triggerAt} variant="timeSince" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <Time date={run.triggerAt} variant="timestamp" />
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Time date={run.metadata.createdAt} variant="timestamp" />
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteClick(run);
-                            }}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {scheduledRunsData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24">
+                    <div className="flex flex-col items-center justify-center gap-4 py-8">
+                      <p className="text-md">No scheduled runs found.</p>
+                      <p className="text-sm text-muted-foreground">
+                        Create a new scheduled run to get started.
+                      </p>
+                      {
+                        <Button onClick={onCreateClicked}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create Scheduled Run
+                        </Button>
+                      }
+                      <DocsButton doc={docs.home['scheduled-runs']} />
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        <Pagination className="p-2 justify-between flex flex-row">
-          <PageSizeSelector />
-          <PageSelector variant="dropdown" />
-        </Pagination>
+              ) : (
+                scheduledRunsData.map((run) => (
+                  <TableRow key={run.metadata.id} className="cursor-pointer">
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{run.workflowName}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(run.workflowRunStatus)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Time date={run.triggerAt} variant="timeSince" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <Time date={run.triggerAt} variant="timestamp" />
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Time
+                          date={run.metadata.createdAt}
+                          variant="timestamp"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(run);
+                              }}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+          <Pagination className="p-2 justify-between flex flex-row">
+            <PageSizeSelector />
+            <PageSelector variant="dropdown" />
+          </Pagination>
+        </div>
       </div>
 
       <DestructiveDialog

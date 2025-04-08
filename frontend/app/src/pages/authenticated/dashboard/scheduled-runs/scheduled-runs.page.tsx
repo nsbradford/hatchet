@@ -5,6 +5,7 @@ import { scheduledRuns } from '@/lib/can/features/scheduled-runs.permissions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Lock, Plus } from 'lucide-react';
 import { PaginationProvider } from '@/components/ui/pagination';
+import { FilterProvider } from '@/hooks/use-filters';
 import {
   Headline,
   HeadlineActionItem,
@@ -59,11 +60,13 @@ export default function ScheduledRunsPage() {
         <>
           <Separator className="my-4" />
 
-          <PaginationProvider>
-            <ScheduledRunsTable
-              onCreateClicked={() => setIsCreateDialogOpen(true)}
-            />
-          </PaginationProvider>
+          <FilterProvider>
+            <PaginationProvider>
+              <ScheduledRunsTable
+                onCreateClicked={() => setIsCreateDialogOpen(true)}
+              />
+            </PaginationProvider>
+          </FilterProvider>
         </>
       )}
     </BasicLayout>
